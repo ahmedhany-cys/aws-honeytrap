@@ -72,6 +72,7 @@ if [ "${PLAN:-0}" = "1" ]; then
   [ -f "$img" ] || { echo "(no image built - using an empty placeholder for plan only)"; : > "$img"; }
   terraform -chdir=terraform plan -input=false -no-color -var-file=environments/dev.tfvars -out=tfplan > "$ROOT/build/plan.txt" 2>&1
   status=$?
+  if [ $status -ne 0 ]; then echo "terraform plan FAILED:"; grep -A8 "^Error" "$ROOT/build/plan.txt"; exit $status; fi
   terraform -chdir=terraform show -json tfplan > "$ROOT/build/tfplan.json" 2>/dev/null
   "$PY" - "$ROOT/build/tfplan.json" "$OUT/terraform-plan-summary.json" "$ROOT/build/plan.txt" <<'PY'
 import collections, json, re, sys

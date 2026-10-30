@@ -1,9 +1,6 @@
 {
-  "findings": 42,
+  "findings": 0,
   "version": "8.30.1",
-  "scope": "working tree",
-  "rules": [
-    "generic-api-key",
-    "private-key"
-  ]
+  "scope": "git history",
+  "rules": []
 }

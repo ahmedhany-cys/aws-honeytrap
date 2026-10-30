@@ -75,8 +75,13 @@ def render(ctx) -> None:
                                       columns=["Field", "Value"]), hide_index=True, use_container_width=True)
         st.markdown("##### ATT&CK techniques")
         if report["techniques"]:
-            st.markdown(" ".join(f'<a href="{t["url"]}" target="_blank"><code>{t["technique_id"]}</code></a> '
-                                 f'{html.escape(t["name"])}<br>' for t in report["techniques"]), unsafe_allow_html=True)
+            chips = "".join(
+                f'<a href="{t["url"]}" target="_blank" title="{html.escape(t["name"])}" style="display:inline-block;'
+                f'margin:0 .35rem .35rem 0;padding:.2rem .5rem;border:1px solid #2a3441;border-radius:999px;'
+                f'background:#121821;color:#c9d1d9;font-size:.78rem;text-decoration:none">'
+                f'<b style="color:#86b6ef">{t["technique_id"]}</b> {html.escape(t["name"])}</a>'
+                for t in report["techniques"])
+            st.markdown(f"<div>{chips}</div>", unsafe_allow_html=True)
         else:
             ui.empty("No technique supported by the evidence.")
 

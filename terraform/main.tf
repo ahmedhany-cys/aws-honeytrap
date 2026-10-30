@@ -35,7 +35,8 @@ module "network" {
   enable_telnet        = var.enable_telnet
   admin_cidr           = var.admin_cidr
   allowed_bucket_arns  = [module.storage.telemetry_bucket_arn, module.storage.artifacts_bucket_arn]
-  flow_logs_bucket_arn = var.enable_flow_logs ? module.storage.telemetry_bucket_arn : null
+  enable_flow_logs     = var.enable_flow_logs
+  flow_logs_bucket_arn = module.storage.telemetry_bucket_arn
 }
 
 module "honeypot" {

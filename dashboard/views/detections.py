@@ -33,7 +33,7 @@ def render(ctx) -> None:
     with c2:
         rules = (al.groupby(["rule_id", "rule_name"]).size().rename("alerts").reset_index()
                  .sort_values("alerts", ascending=False))
-        rules["rule"] = rules["rule_id"] + "  " + rules["rule_name"].str.slice(0, 30)
+        rules["rule"] = rules["rule_id"] + "  " + rules["rule_name"].str.slice(0, 34)
         fig = px.bar(rules, x="alerts", y="rule", orientation="h", title="Detection rules triggered",
                      color_discrete_sequence=[ui.ACCENT], text="alerts")
         fig.update_traces(textposition="outside", cliponaxis=False)

@@ -7,8 +7,9 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
+from honeytrap.detection.commands import extract_urls
 from honeytrap.detection.engine import build_profiles
-from honeytrap.enrichment.service import summarise
+from honeytrap.enrichment.service import is_public_ip, summarise
 from honeytrap.mitre.catalog import attack_version
 from honeytrap.models import Alert, Event, Severity
 
@@ -60,7 +61,8 @@ def build_report(ip: str, events: list[Event], alerts: list[Alert],
             entry["rules"] = sorted(set(entry["rules"]) | {a.rule_id})
     iocs = {
         "source_ip": ip,
-        "urls": sorted({e.url for e in events if e.url and not e.url.startswith("upload:")}),
+        "urls": sorted({e.url for e in events if e.url and not e.url.startswith("upload:")}
+                       | {u for e in events if e.command for u in extract_urls(e.command)}),
         "sha256": sorted({e.file_sha256 for e in events if e.file_sha256}),
         "client_versions": sorted({e.client_version for e in events if e.client_version}),
         "hassh": sorted({e.hassh for e in events if e.hassh}),
@@ -71,7 +73,8 @@ def build_report(ip: str, events: list[Event], alerts: list[Alert],
         "data_origins": origins,
         "attack_version": attack_version(),
         "profile": profile,
-        "enrichment": summarise((enrichment or {}).get(ip)),
+        "enrichment": summarise((enrichment or {}).get(ip)) if (enrichment or {}).get(ip) or is_public_ip(ip)
+        else {"enrichment_status": "skipped_non_public"},
         "alerts": [a.to_dict() for a in alerts],
         "techniques": sorted(techniques.values(), key=lambda t: t["technique_id"]),
         "usernames": Counter(e.username for e in events if e.username).most_common(15),

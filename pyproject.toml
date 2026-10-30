@@ -42,7 +42,7 @@ select = ["E4", "E7", "E9", "F", "B", "S", "UP"]
 ignore = ["S101", "S311", "UP017", "UP040"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106", "S108", "B017"]
+"tests/**" = ["S105", "S106", "S108", "B017", "S603", "S607"]
 "backend/honeytrap/synthetic.py" = ["S105", "S106", "S108"]
 "scripts/**" = ["S603", "S607"]
 

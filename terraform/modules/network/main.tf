@@ -175,7 +175,7 @@ resource "aws_vpc_endpoint" "s3" {
 
 # --------------------------------------------------------------------------- VPC flow logs (optional)
 resource "aws_flow_log" "this" {
-  count                    = var.flow_logs_bucket_arn == null ? 0 : 1
+  count                    = var.enable_flow_logs ? 1 : 0
   vpc_id                   = aws_vpc.this.id
   traffic_type             = "ALL"
   log_destination_type     = "s3"

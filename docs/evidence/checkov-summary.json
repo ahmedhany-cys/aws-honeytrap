@@ -1,0 +1,145 @@
+{
+  "checkov_version": "3.4.0",
+  "resources": 73,
+  "passed": 210,
+  "failed": 0,
+  "skipped": 27,
+  "failed_checks": [],
+  "skipped_checks": [
+    {
+      "check": "CKV_AWS_394",
+      "resource": "aws_availability_zones.available",
+      "justification": "Only used as a default; set var.availability_zone to pin a specific AZ."
+    },
+    {
+      "check": "CKV_AWS_24",
+      "resource": "module.honeypot.aws_vpc_security_group_ingress_rule.ssh",
+      "justification": "Port 22 open to the world is the purpose of an SSH honeypot; it is served by Cowrie, not sshd."
+    },
+    {
+      "check": "CKV_AWS_88",
+      "resource": "module.honeypot.aws_instance.sensor",
+      "justification": "The decoy must have a public IP to receive internet attacks."
+    },
+    {
+      "check": "CKV_AWS_126",
+      "resource": "module.honeypot.aws_instance.sensor",
+      "justification": "Detailed monitoring is billed; basic 5-minute metrics drive the status-check alarm."
+    },
+    {
+      "check": "CKV_AWS_232",
+      "resource": "module.network.aws_network_acl_rule.in_ssh",
+      "justification": "Decoy SSH must be reachable from the internet; served by Cowrie, not sshd."
+    },
+    {
+      "check": "CKV_AWS_283",
+      "resource": "module.network.aws_iam_policy_document.s3_endpoint",
+      "justification": "Gateway endpoint policies require Principal \"*\"; access is narrowed by bucket ARN and, for our buckets, to principals of this account. The AL2023 repo is read anonymously by dnf, so it cannot carry a principal condition."
+    },
+    {
+      "check": "CKV_AWS_337",
+      "resource": "module.pipeline.aws_ssm_parameter.hmac",
+      "justification": "Uses the AWS managed aws/ssm key; a customer managed key costs $1/month (see docs/cost-management.md)."
+    },
+    {
+      "check": "CKV_AWS_337",
+      "resource": "module.pipeline.aws_ssm_parameter.api_keys[\"abuseipdb-api-key\"]",
+      "justification": "Uses the AWS managed aws/ssm key; a customer managed key costs $1/month."
+    },
+    {
+      "check": "CKV_AWS_338",
+      "resource": "module.pipeline.aws_cloudwatch_log_group.lambda[\"correlator\"]",
+      "justification": "Operational logs only; 14-day retention is a cost and data-minimisation choice. Evidence lives in S3."
+    },
+    {
+      "check": "CKV_AWS_158",
+      "resource": "module.pipeline.aws_cloudwatch_log_group.lambda[\"correlator\"]",
+      "justification": "Log groups are encrypted at rest by CloudWatch; a KMS CMK adds monthly cost."
+    },
+    {
+      "check": "CKV_AWS_117",
+      "resource": "module.pipeline.aws_lambda_function.this[\"correlator\"]",
+      "justification": "Not in a VPC - a VPC Lambda would need NAT or paid interface endpoints to reach S3/SNS/SSM and the TI APIs."
+    },
+    {
+      "check": "CKV_AWS_173",
+      "resource": "module.pipeline.aws_lambda_function.this[\"correlator\"]",
+      "justification": "Environment variables hold only resource names; secrets live in SSM SecureString."
+    },
+    {
+      "check": "CKV_AWS_272",
+      "resource": "module.pipeline.aws_lambda_function.this[\"correlator\"]",
+      "justification": "Code signing needs AWS Signer profiles; the package is built reproducibly in CI instead."
+    },
+    {
+      "check": "CKV_AWS_115",
+      "resource": "module.pipeline.aws_lambda_function.this[\"correlator\"]",
+      "justification": "New accounts have an account concurrency of 10; reserving concurrency is not possible."
+    },
+    {
+      "check": "CKV_AWS_337",
+      "resource": "module.pipeline.aws_ssm_parameter.api_keys[\"virustotal-api-key\"]",
+      "justification": "Uses the AWS managed aws/ssm key; a customer managed key costs $1/month."
+    },
+    {
+      "check": "CKV_AWS_338",
+      "resource": "module.pipeline.aws_cloudwatch_log_group.lambda[\"processor\"]",
+      "justification": "Operational logs only; 14-day retention is a cost and data-minimisation choice. Evidence lives in S3."
+    },
+    {
+      "check": "CKV_AWS_158",
+      "resource": "module.pipeline.aws_cloudwatch_log_group.lambda[\"processor\"]",
+      "justification": "Log groups are encrypted at rest by CloudWatch; a KMS CMK adds monthly cost."
+    },
+    {
+      "check": "CKV_AWS_117",
+      "resource": "module.pipeline.aws_lambda_function.this[\"processor\"]",
+      "justification": "Not in a VPC - a VPC Lambda would need NAT or paid interface endpoints to reach S3/SNS/SSM and the TI APIs."
+    },
+    {
+      "check": "CKV_AWS_173",
+      "resource": "module.pipeline.aws_lambda_function.this[\"processor\"]",
+      "justification": "Environment variables hold only resource names; secrets live in SSM SecureString."
+    },
+    {
+      "check": "CKV_AWS_272",
+      "resource": "module.pipeline.aws_lambda_function.this[\"processor\"]",
+      "justification": "Code signing needs AWS Signer profiles; the package is built reproducibly in CI instead."
+    },
+    {
+      "check": "CKV_AWS_115",
+      "resource": "module.pipeline.aws_lambda_function.this[\"processor\"]",
+      "justification": "New accounts have an account concurrency of 10; reserving concurrency is not possible."
+    },
+    {
+      "check": "CKV_AWS_300",
+      "resource": "module.storage.aws_s3_bucket_lifecycle_configuration.telemetry",
+      "justification": "Every dynamic rule sets abort_incomplete_multipart_upload; Checkov does not expand dynamic blocks."
+    },
+    {
+      "check": "CKV2_AWS_62",
+      "resource": "module.storage.aws_s3_bucket.this",
+      "justification": "Telemetry bucket sends events to EventBridge (aws_s3_bucket_notification); the artifacts bucket has no consumers."
+    },
+    {
+      "check": "CKV2_AWS_61",
+      "resource": "module.storage.aws_s3_bucket.this",
+      "justification": "Both buckets have lifecycle configurations; Checkov cannot resolve them through for_each."
+    },
+    {
+      "check": "CKV_AWS_18",
+      "resource": "module.storage.aws_s3_bucket.this",
+      "justification": "Server access logging would double request volume; CloudTrail data events can be enabled if needed."
+    },
+    {
+      "check": "CKV_AWS_144",
+      "resource": "module.storage.aws_s3_bucket.this",
+      "justification": "Cross-region replication doubles storage cost for disposable lab telemetry."
+    },
+    {
+      "check": "CKV_AWS_145",
+      "resource": "module.storage.aws_s3_bucket.this",
+      "justification": "SSE-S3 (AES-256) instead of SSE-KMS to avoid KMS key and request charges."
+    }
+  ]
+}

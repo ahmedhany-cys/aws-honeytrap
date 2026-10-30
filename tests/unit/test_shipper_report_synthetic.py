@@ -99,7 +99,7 @@ def test_report_is_labelled_and_redacted(fixture_lines, redactor):
     assert "hunter2" not in md and "Welcome2026!" not in md
     assert "T1105" in md and "Ingress Tool Transfer" in md
     assert report["profile"]["actor_type"] == "Malware dropper / bot loader"
-    assert "198.51.100.23" not in report["iocs"]["source_ip"]
+    assert "http://198.51.100.23/bins/x86_64" in report["iocs"]["urls"]
 
 
 def test_report_unknown_ip(fixture_lines, redactor):

@@ -49,9 +49,8 @@ def render(ctx) -> None:
         st.markdown("##### Event record")
         if rows:
             record = table.iloc[rows[0]].to_dict()
-            full = ev[ev["event_id"] == record["event_id"]].drop(columns=["ts"]).iloc[0].to_dict()
-            st.code(json.dumps({k: v for k, v in full.items() if v is not None and v == v}, indent=2, default=str),
-                    language="json")
+            obj = next(e for e in ctx["ds"].event_objects if e.event_id == record["event_id"])
+            st.code(json.dumps({k: v for k, v in obj.to_dict().items() if v is not None}, indent=2), language="json")
             linked = al[al["evidence_event_ids"].apply(lambda ids: record["event_id"] in ids)]
             if not linked.empty:
                 st.markdown("**Referenced by alerts:** " + ", ".join(

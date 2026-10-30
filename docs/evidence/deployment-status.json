@@ -1,0 +1,6 @@
+{
+  "status": "NOT DEPLOYED",
+  "detail": "terraform plan succeeded against the target account (80 resources, read-only); terraform apply has not been run and awaits the owner's explicit approval because it creates publicly exposed, potentially billable resources.",
+  "account_plan": "AWS Free plan (credits), checked with `aws freetier get-account-plan-state` on 2026-10-30",
+  "region": "us-west-1"
+}

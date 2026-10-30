@@ -43,8 +43,14 @@ variable "allowed_bucket_arns" {
   type        = list(string)
 }
 
+variable "enable_flow_logs" {
+  description = "Deliver VPC flow logs (parquet) to flow_logs_bucket_arn. A bool, so count is known at plan time."
+  type        = bool
+  default     = true
+}
+
 variable "flow_logs_bucket_arn" {
-  description = "Bucket ARN for VPC flow logs (parquet). null disables flow logs."
+  description = "Bucket ARN for VPC flow logs."
   type        = string
   default     = null
 }

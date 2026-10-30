@@ -101,6 +101,19 @@ def _iac() -> None:
     tflint = _load("tflint.txt")
     checkov = _load("checkov-summary.json")
     gitleaks = _load("gitleaks-summary.json")
+    plan = _load("terraform-plan-summary.json")
+    status = _load("deployment-status.json")
+    if plan:
+        ui.kpi_row([("terraform plan", plan["plan"].replace("Plan: ", "").split(",")[0],
+                     f"0 change · 0 destroy · Terraform {plan['terraform_version']}"),
+                    ("Resources", plan["resources_to_create"], f"{len(plan['by_type'])} resource types"),
+                    ("Applied", "No" if not plan.get("applied") else "Yes",
+                     (status or {}).get("status", "")),
+                    ("Checkov", f"{checkov['failed']} failed" if checkov else "n/a",
+                     f"{checkov['passed']} passed · {checkov['skipped']} justified skips" if checkov else "")])
+        if status:
+            st.info(status["detail"])
+        st.write("")
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("##### terraform fmt / validate")
@@ -110,16 +123,23 @@ def _iac() -> None:
             st.code(((fmt or "") + "\n" + validate).strip(), language="text")
         st.markdown("##### tflint")
         st.code(tflint.strip() or "no issues", language="text") if tflint is not None else _missing("tflint.txt")
+        if plan:
+            st.markdown("##### Planned resources by type")
+            st.dataframe(pd.DataFrame(sorted(plan["by_type"].items(), key=lambda kv: -kv[1]),
+                                      columns=["Resource type", "Count"]), hide_index=True,
+                         use_container_width=True, height=300)
     with c2:
         st.markdown("##### Checkov (IaC security scan)")
         if checkov is None:
             _missing("checkov-summary.json")
         else:
-            ui.kpi_row([("Passed", checkov["passed"], "checks"), ("Failed", checkov["failed"], "checks"),
-                        ("Skipped", checkov["skipped"], "justified in code")])
+            st.markdown(f"Checkov {checkov['checkov_version']} over {checkov['resources']} resources: "
+                        f"**{checkov['passed']} passed, {checkov['failed']} failed, {checkov['skipped']} skipped** "
+                        "(each skip carries an in-code justification).")
             if checkov.get("skipped_checks"):
-                st.dataframe(pd.DataFrame(checkov["skipped_checks"]), hide_index=True, use_container_width=True,
-                             height=260)
+                skipped = pd.DataFrame(checkov["skipped_checks"])[["check", "justification", "resource"]]
+                st.dataframe(skipped, hide_index=True, use_container_width=True, height=300,
+                             column_config={"justification": st.column_config.TextColumn(width="large")})
             if checkov.get("failed_checks"):
                 st.markdown("**Open findings**")
                 st.dataframe(pd.DataFrame(checkov["failed_checks"]), hide_index=True, use_container_width=True)
@@ -137,7 +157,7 @@ def _simulations() -> None:
         _missing("simulation-results.json")
         return
     ui.kpi_row([("Scenarios passed", f"{sim['passed']}/{sim['total']}", "expected detections fired"),
-                ("Target", sim["target"], "loopback-only honeypot"),
+                ("Target", sim["target"].split(":")[0], "SSH 2222 · Telnet 2223 · loopback only"),
                 ("Run at", sim["generated_at"].replace("T", " ")[:16], "UTC"),
                 ("Data origin", "SIMULATION", "never reported as live")])
     rows = [{"Scenario": s["title"], "Result": "PASS" if s["passed"] else "FAIL", "Events": s["events_captured"],
