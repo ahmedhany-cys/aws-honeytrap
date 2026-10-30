@@ -1,2 +1,19 @@
-# Cowrie honeypot (installed in the sensor image and for native local runs)
-cowrie==3.1.4
+# Runtime dependencies of the Cowrie sensor.
+#
+# cowrie==3.1.4 pins twisted[conch]==26.4.0, which is affected by advisories fixed
+# in Twisted 26.10.0 - notably CVE-2026-115778 (unbounded memory in the conch Telnet
+# transport, which our Telnet decoy uses) and CVE-2026-83813 (DNS response spoofing in
+# twisted.names, which Cowrie uses to vet download targets). We therefore pin Cowrie's
+# dependency set ourselves with Twisted 26.10.0 and install Cowrie with --no-deps
+# (requirements-cowrie.txt). Drop this override once Cowrie ships a newer pin.
+attrs==26.1.0
+bcrypt==5.0.0
+cryptography==50.0.2
+hyperlink==21.0.0
+idna==3.20
+lark==1.3.1
+packaging==26.3
+pyasn1_modules==0.4.2
+service_identity==26.1.0
+treq==26.7.0
+twisted[conch]==26.10.0

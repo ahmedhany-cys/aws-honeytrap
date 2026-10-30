@@ -21,7 +21,7 @@ A honeypot is an internet-facing system that we *want* to be attacked. The desig
 | Decoy credentials mistaken for real ones | Every "secret" in the fake filesystem is a documented decoy prefixed `decoy-` and is valid nowhere. | `test_decoy_credentials_are_obviously_fake` |
 | Simulated or synthetic activity reported as real | Every record carries `data_origin`. Rules run per origin, and S3 keys, Athena partitions, alerts, SNS subjects, reports and dashboard banners all show it. | `test_origins_are_never_correlated` |
 | Secrets committed to git | gitleaks in CI, pattern-based repository tests, `.gitignore` for data, state, `.env` and runtime files. | `tests/security/test_repository_hygiene.py` |
-| Supply chain | Python dependencies pinned and audited with `pip-audit` in CI. Base image pinned by tag. The engine and Lambdas use only the standard library (and the runtime's boto3), so the Lambda package has no third-party code. | CI `dependencies` job |
+| Supply chain | Python dependencies pinned and audited with `pip-audit` in CI. Cowrie 3.1.4 pins Twisted 26.4.0, which is affected by CVE-2026-115778 (Telnet transport memory exhaustion) and CVE-2026-83813 (DNS spoofing in `twisted.names`), so the sensor overrides it with **Twisted 26.10.0** (`requirements-honeypot.txt`, Cowrie installed `--no-deps`) and all 8 simulations were re-run against it. CVE-2026-106454 (`twisted.mail.imap4`, no fix yet) is ignored with a justification because Cowrie never imports `twisted.mail`. Base image pinned by tag. The engine and Lambdas use only the standard library (and the runtime's boto3), so the Lambda package has no third-party code. | CI `dependencies` job |
 
 ## Network isolation in detail
 

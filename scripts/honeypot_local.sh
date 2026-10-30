@@ -20,7 +20,7 @@ prepare() {
 
 case "${1:-start}" in
   start)
-    [ -x "$COWRIE" ] || { echo "cowrie not installed: $VENV/bin/pip install -r requirements-honeypot.txt"; exit 1; }
+    [ -x "$COWRIE" ] || { echo "cowrie not installed: $VENV/bin/pip install -r requirements-honeypot.txt \&\& $VENV/bin/pip install --no-deps -r requirements-cowrie.txt"; exit 1; }
     prepare
     cd "$RUNTIME"
     export COWRIE_SSH_LISTEN_ENDPOINTS="tcp:2222:interface=127.0.0.1"

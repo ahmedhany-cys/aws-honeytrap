@@ -12,7 +12,7 @@ There are three ways to run HoneyTrap, from zero-risk to internet-exposed:
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt && .venv/bin/pip install -e .
+.venv/bin/pip install -r requirements-dev.txt && .venv/bin/pip install --no-deps -r requirements-cowrie.txt && .venv/bin/pip install -e .
 scripts/honeypot_local.sh start                       # Cowrie on 127.0.0.1:2222 (ssh) / 2223 (telnet)
 .venv/bin/python -m tests.simulations.runner          # 8 controlled attack scenarios -> data/simulation
 .venv/bin/honeytrap synth --store data/demo           # labelled SYNTHETIC demo data (optional)

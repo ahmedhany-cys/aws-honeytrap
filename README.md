@@ -151,7 +151,7 @@ The data shown below is **SIMULATION** (272 real Cowrie events from the 8 contro
 ```bash
 git clone https://github.com/ahmedhany-cys/aws-honeytrap && cd aws-honeytrap
 python3.12 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt && .venv/bin/pip install -e .
+.venv/bin/pip install -r requirements-dev.txt && .venv/bin/pip install --no-deps -r requirements-cowrie.txt && .venv/bin/pip install -e .
 
 scripts/honeypot_local.sh start                 # Cowrie on 127.0.0.1:2222 (SSH) / 2223 (Telnet)
 .venv/bin/python -m tests.simulations.runner    # 8 attack scenarios -> data/simulation (SIMULATION)
