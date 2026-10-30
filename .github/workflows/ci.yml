@@ -55,6 +55,9 @@ jobs:
       - run: terraform validate
       - uses: terraform-linters/setup-tflint@v4
       - run: tflint --init && tflint --recursive --format compact
+        env:
+          # Authenticated plugin download; anonymous GitHub API calls from shared runners get rate limited.
+          GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
