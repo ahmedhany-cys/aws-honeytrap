@@ -66,6 +66,22 @@ class Scenario:
     source_suffix: int = 10
 
 
+def wait_for_ssh_banner(host: str, port: int, timeout: float = 90) -> None:
+    """Block until the honeypot sends an SSH banner. An open port is not enough:
+    Docker's port proxy accepts connections before Cowrie has generated its host keys."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=3) as sock:
+                sock.settimeout(3)
+                if sock.recv(16).startswith(b"SSH-"):
+                    return
+        except OSError:
+            pass
+        time.sleep(1)
+    raise TimeoutError(f"no SSH banner from {host}:{port} within {timeout:.0f}s")
+
+
 def _sock(target: Target, port: int) -> socket.socket:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(10)

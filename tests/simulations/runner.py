@@ -24,7 +24,12 @@ from honeytrap.models import DataOrigin  # noqa: E402
 from honeytrap.notify import LogNotifier  # noqa: E402
 from honeytrap.pipeline import correlate, process_batch  # noqa: E402
 from honeytrap.storage.store import LocalStore  # noqa: E402
-from tests.simulations.scenarios import SCENARIOS, Target, assert_authorized_target  # noqa: E402
+from tests.simulations.scenarios import (  # noqa: E402
+    SCENARIOS,
+    Target,
+    assert_authorized_target,
+    wait_for_ssh_banner,
+)
 
 
 def _read_from(path: Path, offset: int) -> tuple[list[str], int]:
@@ -36,6 +41,7 @@ def _read_from(path: Path, offset: int) -> tuple[list[str], int]:
 
 def run(args) -> dict:
     assert_authorized_target(args.host, args.authorized_target)
+    wait_for_ssh_banner(args.host, args.ssh_port)
     log_path = Path(args.log)
     selected = [s for s in SCENARIOS if not args.only or s.name in args.only]
     linux = platform.system() == "Linux"
