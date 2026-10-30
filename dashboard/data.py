@@ -20,7 +20,8 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from honeytrap.detection.engine import build_profiles  # noqa: E402
 from honeytrap.enrichment.service import summarise  # noqa: E402
-from honeytrap.models import Severity  # noqa: E402
+from honeytrap.models import Alert, Event, Severity  # noqa: E402
+from honeytrap.reporting.pseudonymize import IPPseudonymizer  # noqa: E402
 from honeytrap.storage import repository as repo  # noqa: E402
 from honeytrap.storage.store import LocalStore, store_from_uri  # noqa: E402
 
@@ -38,6 +39,7 @@ class Dataset:
     profiles: pd.DataFrame
     enrichment: dict
     sources: list[str]
+    redacted: bool = False
 
 
 def _resolve(uri: str):
@@ -57,6 +59,14 @@ def load(stores: str | None = None) -> Dataset:
         alerts += repo.read_alerts(store)
         enrichment.update(repo.read_enrichment(store))
 
+    redacted = os.environ.get("HONEYTRAP_REDACT_IPS", "").lower() in ("1", "true", "yes")
+    if redacted:
+        # Public attacker IPs are personal data in some jurisdictions; pseudonymise before display.
+        p = IPPseudonymizer()
+        events = [Event.from_dict(p.obj(e.to_dict())) for e in events]
+        alerts = [Alert.from_dict(p.obj(a.to_dict())) for a in alerts]
+        enrichment = p.obj(enrichment)
+
     ev = pd.DataFrame([e.to_dict() for e in events])
     if not ev.empty:
         ev["ts"] = pd.to_datetime(ev["timestamp"], utc=True, format="ISO8601")
@@ -69,7 +79,7 @@ def load(stores: str | None = None) -> Dataset:
 
     profiles = pd.DataFrame(build_profiles(events, alerts, enrichment))
     return Dataset(events=ev, alerts=al, alert_objects=alerts, event_objects=events, profiles=profiles,
-                   enrichment=enrichment, sources=uris)
+                   enrichment=enrichment, sources=uris, redacted=redacted)
 
 
 def enrichment_frame(enrichment: dict) -> pd.DataFrame:

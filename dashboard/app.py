@@ -73,6 +73,8 @@ with st.sidebar:
         "Event type", sorted(ds.events["event_type"].unique()) if not ds.events.empty else [])
     st.divider()
     st.caption("Sources: " + ", ".join(f"`{s}`" for s in ds.sources))
+    if ds.redacted:
+        st.caption("🔒 Public IPs pseudonymised (a.b.x.x·tag)")
     if st.button("Reload data", use_container_width=True):
         _load.clear()
         st.rerun()
