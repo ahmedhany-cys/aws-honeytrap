@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif">
+  <title>AWS HoneyTrap architecture</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8b949e"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d42a4c"/>
+    </marker>
+    <style>
+      .t{fill:#e6edf3;font-size:13px;font-weight:600}
+      .s{fill:#8b949e;font-size:11px}
+      .h{fill:#c9d1d9;font-size:12px;font-weight:700;letter-spacing:.04em}
+      .box{fill:#121821;stroke:#2a3441;stroke-width:1.5;rx:10}
+      .svc{fill:#121821;stroke:#3987e5;stroke-width:1.5;rx:10}
+      .ln{stroke:#8b949e;stroke-width:1.6;fill:none;marker-end:url(#a)}
+      .dash{stroke-dasharray:5 4}
+    </style>
+  </defs>
+  <rect width="1280" height="760" fill="#0b1017"/>
+
+  <!-- Attackers -->
+  <rect x="20" y="285" width="150" height="120" rx="12" fill="#1a1116" stroke="#d42a4c" stroke-width="1.5"/>
+  <text x="95" y="320" text-anchor="middle" class="t">Internet</text>
+  <text x="95" y="338" text-anchor="middle" class="t">attackers</text>
+  <text x="95" y="360" text-anchor="middle" class="s">scanners · botnets</text>
+  <text x="95" y="376" text-anchor="middle" class="s">brute-forcers</text>
+  <path d="M170,345 L268,300" stroke="#d42a4c" stroke-width="1.8" fill="none" marker-end="url(#r)"/>
+  <text x="178" y="296" class="s" fill="#d42a4c">SSH :22</text>
+  <text x="178" y="310" class="s">Telnet :23 (opt.)</text>
+
+  <!-- AWS account -->
+  <rect x="200" y="20" width="1060" height="600" rx="14" fill="none" stroke="#e8742c" stroke-width="1.5"/>
+  <text x="216" y="44" class="h" fill="#e8742c">AWS ACCOUNT · single region · Free Tier sized</text>
+
+  <!-- VPC -->
+  <rect x="220" y="60" width="350" height="545" rx="12" fill="#0f141c" stroke="#199e70" stroke-width="1.5"/>
+  <text x="236" y="84" class="h">HONEYPOT VPC 10.42.0.0/16</text>
+  <text x="236" y="100" class="s">dedicated · no NAT · no peering · no VPN · flow logs → S3</text>
+  <rect x="236" y="112" width="318" height="368" rx="10" fill="none" stroke="#2a3441" stroke-width="1.2"/>
+  <text x="248" y="132" class="s">Public subnet 10.42.1.0/24 · restrictive NACL</text>
+  <rect x="248" y="142" width="294" height="328" rx="10" fill="none" stroke="#f5c518" stroke-width="1.2" class="dash"/>
+  <text x="258" y="160" class="s" fill="#f5c518">Security group: in 22 (+23) · out 443 → S3 prefix list ONLY</text>
+
+  <rect x="262" y="170" width="266" height="290" class="box"/>
+  <text x="276" y="192" class="t">EC2 t3.micro · Amazon Linux 2023</text>
+  <text x="276" y="208" class="s">IMDSv2 required · hop limit 1 · encrypted gp3 · sshd off</text>
+  <rect x="276" y="218" width="238" height="82" rx="8" fill="#16202c" stroke="#3987e5"/>
+  <text x="288" y="238" class="t">Cowrie container</text>
+  <text x="288" y="255" class="s">emulated shell + fake FS (nwf-db-prod-02)</text>
+  <text x="288" y="270" class="s">22→2222 · 23→2223 · JSON + TTY logs</text>
+  <text x="288" y="285" class="s">non-root · read-only · cap-drop ALL</text>
+  <rect x="276" y="308" width="238" height="44" rx="8" fill="#1a1116" stroke="#d42a4c"/>
+  <text x="288" y="327" class="t" style="font-size:12px">iptables DOCKER-USER</text>
+  <text x="288" y="342" class="s">container egress DROP (incl. DNS, IMDS)</text>
+  <rect x="276" y="360" width="238" height="88" rx="8" fill="#16202c" stroke="#2a3441"/>
+  <text x="288" y="380" class="t">Shipper (host, systemd timer)</text>
+  <text x="288" y="397" class="s">every 5 min: new cowrie.json lines</text>
+  <text x="288" y="412" class="s">→ gzip → s3:PutObject raw/origin=live/</text>
+  <text x="288" y="427" class="s">+ TTY recordings → evidence/</text>
+  <text x="288" y="441" class="s">IAM: PutObject on own prefixes only</text>
+
+  <rect x="262" y="505" width="266" height="80" class="svc"/>
+  <text x="276" y="527" class="t">S3 gateway endpoint (free)</text>
+  <text x="276" y="544" class="s">endpoint policy allows only:</text>
+  <text x="276" y="559" class="s">· HoneyTrap telemetry + artifacts buckets</text>
+  <text x="276" y="574" class="s">· Amazon Linux 2023 package repository</text>
+  <path d="M395,448 L395,503" class="ln"/>
+
+  <!-- S3 -->
+  <rect x="610" y="70" width="230" height="245" class="svc"/>
+  <text x="624" y="93" class="t">S3 telemetry bucket</text>
+  <text x="624" y="109" class="s">SSE-S3 · versioned · public access blocked</text>
+  <text x="624" y="124" class="s">TLS ≥ 1.2 enforced · lifecycle expiry</text>
+  <text x="624" y="150" class="s" fill="#e8742c">raw/        clear-text creds · 14–30 d</text>
+  <text x="624" y="167" class="s" fill="#e8742c">evidence/   TTY logs, files · 14–30 d</text>
+  <text x="624" y="184" class="s">processed/events  normalised, masked</text>
+  <text x="624" y="201" class="s">processed/alerts  one JSON per alert</text>
+  <text x="624" y="218" class="s">processed/enrichment  TI cache (24 h)</text>
+  <text x="624" y="235" class="s">processed/profiles  attacker profiles</text>
+  <text x="624" y="252" class="s">flowlogs/  ·  athena-results/ (7 d)</text>
+  <text x="624" y="280" class="s">partitions: origin=live|simulation|synthetic</text>
+  <text x="624" y="296" class="s">dt=YYYY-MM-DD</text>
+  <rect x="610" y="335" width="230" height="70" class="svc"/>
+  <text x="624" y="358" class="t">S3 artifacts bucket</text>
+  <text x="624" y="375" class="s">Cowrie image tar · shipper.py</text>
+  <text x="624" y="391" class="s">read once at boot via the endpoint</text>
+  <path d="M528,530 C575,530 570,200 606,200" class="ln"/>
+  <path d="M606,380 C580,380 575,520 530,540" class="ln dash"/>
+
+  <!-- EventBridge -->
+  <rect x="880" y="70" width="170" height="70" class="svc"/>
+  <text x="892" y="93" class="t">EventBridge rule</text>
+  <text x="892" y="110" class="s">S3 Object Created</text>
+  <text x="892" y="125" class="s">prefix raw/</text>
+  <rect x="880" y="160" width="170" height="60" class="svc"/>
+  <text x="892" y="183" class="t">EventBridge schedule</text>
+  <text x="892" y="200" class="s">rate(1 hour)</text>
+  <path d="M840,105 L878,105" class="ln"/>
+
+  <!-- Lambdas -->
+  <rect x="1080" y="70" width="165" height="70" class="svc" style="stroke:#e8742c"/>
+  <text x="1092" y="93" class="t">λ processor</text>
+  <text x="1092" y="110" class="s">parse · redact · detect</text>
+  <text x="1092" y="125" class="s">enrich · alert</text>
+  <rect x="1080" y="160" width="165" height="60" class="svc" style="stroke:#e8742c"/>
+  <text x="1092" y="183" class="t">λ correlator</text>
+  <text x="1092" y="200" class="s">24 h windows · profiles</text>
+  <path d="M1050,105 L1078,105" class="ln"/>
+  <path d="M1050,190 L1078,190" class="ln"/>
+  <path d="M1080,225 C990,250 900,260 842,250" class="ln dash"/>
+  <text x="900" y="246" class="s">write processed/*</text>
+
+  <rect x="1080" y="250" width="165" height="64" class="box"/>
+  <text x="1092" y="272" class="t">SSM Parameter Store</text>
+  <text x="1092" y="289" class="s">SecureString: HMAC key,</text>
+  <text x="1092" y="304" class="s">AbuseIPDB / VT keys</text>
+  <rect x="1080" y="330" width="165" height="64" class="box"/>
+  <text x="1092" y="352" class="t">SNS alerts topic</text>
+  <text x="1092" y="369" class="s">High/Critical → email</text>
+  <text x="1092" y="384" class="s">SSE (aws/sns key)</text>
+  <path d="M1162,222 L1162,248" class="ln"/>
+  <rect x="880" y="250" width="170" height="64" class="box"/>
+  <text x="892" y="272" class="t">SQS dead-letter queue</text>
+  <text x="892" y="289" class="s">failed events, 14 d</text>
+  <text x="892" y="304" class="s">alarm when not empty</text>
+  <rect x="880" y="330" width="170" height="80" class="box"/>
+  <text x="892" y="352" class="t">CloudWatch</text>
+  <text x="892" y="369" class="s">Logs (14 d) · EMF metrics</text>
+  <text x="892" y="384" class="s">alarms: errors, DLQ, EC2,</text>
+  <text x="892" y="399" class="s">no-telemetry (3 h)</text>
+
+  <rect x="610" y="430" width="230" height="80" class="svc"/>
+  <text x="624" y="453" class="t">Athena + Glue Data Catalog</text>
+  <text x="624" y="470" class="s">partition projection (no crawler)</text>
+  <text x="624" y="485" class="s">workgroup scan cap 100 MB/query</text>
+  <text x="624" y="500" class="s">saved investigation queries</text>
+  <path d="M725,428 L725,318" class="ln"/>
+  <rect x="880" y="430" width="170" height="80" class="box"/>
+  <text x="892" y="453" class="t">AWS Budgets</text>
+  <text x="892" y="470" class="s">project + account budgets</text>
+  <text x="892" y="485" class="s">email at 25% / 80% / 100% fc</text>
+  <text x="892" y="500" class="s">(alerts do not stop spend)</text>
+  <rect x="1080" y="430" width="165" height="80" class="box"/>
+  <text x="1092" y="453" class="t">IAM</text>
+  <text x="1092" y="470" class="s">one role per component</text>
+  <text x="1092" y="485" class="s">prefix-scoped S3 actions</text>
+  <text x="1092" y="500" class="s">no wildcards on data</text>
+
+  <!-- External -->
+  <rect x="1020" y="650" width="240" height="90" rx="12" fill="#0f141c" stroke="#2a3441" stroke-dasharray="5 4"/>
+  <text x="1034" y="674" class="t">Threat-intel APIs (optional)</text>
+  <text x="1034" y="691" class="s">AbuseIPDB (1,000/day free)</text>
+  <text x="1034" y="706" class="s">VirusTotal (500/day free)</text>
+  <text x="1034" y="721" class="s">GeoLite2 (local .mmdb)</text>
+  <path d="M1200,142 C1290,300 1290,560 1200,646" class="ln dash"/>
+  <rect x="610" y="650" width="380" height="90" rx="12" fill="#0f141c" stroke="#2a3441"/>
+  <text x="624" y="674" class="t">Analyst workstation</text>
+  <text x="624" y="691" class="s">Streamlit dashboard (reads processed/, read-only)</text>
+  <text x="624" y="706" class="s">incident reports · Athena console · CLI</text>
+  <text x="624" y="721" class="s">every view labels data as LIVE / SIMULATION / SYNTHETIC</text>
+  <path d="M760,648 C760,600 800,560 800,318" class="ln dash"/>
+
+  <rect x="20" y="650" width="560" height="90" rx="12" fill="#0f141c" stroke="#2a3441"/>
+  <text x="34" y="674" class="t">Deliberately absent (cost &amp; risk)</text>
+  <text x="34" y="693" class="s">No NAT gateway · no load balancer · no interface endpoints · no KMS CMK · no GuardDuty</text>
+  <text x="34" y="710" class="s">No real credentials anywhere on the decoy · no route to any other environment</text>
+  <text x="34" y="727" class="s">Attacker commands are emulated by Cowrie and never executed by a real shell</text>
+</svg>

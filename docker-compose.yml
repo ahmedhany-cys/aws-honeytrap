@@ -1,0 +1,52 @@
+# Local lab: Cowrie sensor + dashboard, both bound to 127.0.0.1 only.
+#
+#   mkdir -p honeypot/runtime/docker-var && chmod 0777 honeypot/runtime/docker-var
+#   docker compose up -d --build
+#   python -m tests.simulations.runner --log honeypot/runtime/docker-var/log/cowrie/cowrie.json
+#
+# The container runs with the same restrictions as on EC2 (read-only root,
+# no capabilities, no privilege escalation, resource limits).
+
+services:
+  cowrie:
+    build:
+      context: .
+      dockerfile: honeypot/Dockerfile
+    image: honeytrap/cowrie:latest
+    container_name: honeytrap-cowrie
+    environment:
+      COWRIE_HONEYPOT_SENSOR_NAME: honeytrap-docker
+    ports:
+      - "127.0.0.1:2222:2222"
+      - "127.0.0.1:2223:2223"
+    volumes:
+      - ./honeypot/runtime/docker-var:/cowrie/var
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    pids_limit: 256
+    cpus: 0.8
+    restart: unless-stopped
+
+  dashboard:
+    image: python:3.12.13-slim-bookworm
+    container_name: honeytrap-dashboard
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir -q -r requirements.txt &&
+             streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501"
+    environment:
+      HONEYTRAP_DATA: data/simulation,data/demo
+    ports:
+      - "127.0.0.1:8501:8501"
+    volumes:
+      - ./:/app:ro
+    read_only: false
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    profiles: ["dashboard"]

@@ -1,0 +1,61 @@
+# Default detection thresholds for the HoneyTrap engine.
+#
+# Override any value without editing this file by pointing the
+# HONEYTRAP_DETECTION_CONFIG environment variable at a TOML file that contains
+# only the keys you want to change (see config/detection.lab.toml).
+#
+# Windows are tumbling windows aligned to the epoch, so the same evidence
+# always produces the same alert ID whether it is evaluated per batch (processor
+# Lambda) or over the last 24 hours (correlator Lambda).
+
+[brute_force]                  # HT-AUTH-001
+window_minutes = 10
+failed_logins = 10             # >= this many failed logins from one IP in a window
+high_severity_failed_logins = 50
+
+[password_spraying]            # HT-AUTH-002
+window_minutes = 60
+distinct_usernames = 5         # one password tried against >= N distinct usernames
+
+[repeated_credentials]         # HT-AUTH-003
+window_minutes = 60
+repeats = 3                    # same username:password pair from one IP >= N times
+
+[credential_stuffing]          # HT-AUTH-004
+window_minutes = 60
+distinct_pairs = 20            # >= N distinct username:password pairs from one IP...
+distinct_usernames = 5         # ...spread across >= N usernames
+max_repeat_ratio = 0.2         # ...with few repeats (pairs look like a combo list)
+
+[shared_credentials]           # HT-AUTH-005
+window_hours = 24
+distinct_ips = 5               # same pair seen from >= N distinct IPs (Informational)
+
+[successful_login]             # HT-AUTH-006
+default_account_names = ["root", "admin", "administrator", "pi", "ubnt", "user", "test", "guest", "oracle", "support", "ubuntu"]
+
+[high_frequency]               # HT-NET-001
+window_minutes = 1
+connections = 20
+
+[multiple_sessions]            # HT-NET-002
+window_hours = 24
+sessions = 5
+
+[discovery]                    # HT-CMD-001
+medium_severity_techniques = 3 # >= N distinct discovery techniques in one session
+
+[severity]
+# Escalate one level when AbuseIPDB reports at least this confidence score.
+abuseipdb_escalation_score = 75
+# Escalate one level when at least this many VirusTotal engines flag the IP.
+virustotal_escalation_malicious = 5
+# Minimum severity that is published to SNS.
+notify_min_severity = "High"
+
+[enrichment]
+cache_ttl_hours = 24
+# Only enrich IPs that triggered an alert at or above this severity, to stay
+# inside free API quotas (AbuseIPDB free: 1,000 checks/day; VirusTotal public: 500/day, 4/min).
+min_severity = "Low"
+timeout_seconds = 5

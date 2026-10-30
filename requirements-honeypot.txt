@@ -1,0 +1,2 @@
+# Cowrie honeypot (installed in the sensor image and for native local runs)
+cowrie==3.1.4

@@ -1,0 +1,113 @@
+#!/bin/bash
+# HoneyTrap sensor bootstrap (Amazon Linux 2023). Rendered by Terraform.
+# The instance has NO internet egress: packages come from the AL2023 repo and
+# artifacts from our bucket, both through the S3 gateway endpoint.
+set -euxo pipefail
+exec > >(tee /var/log/honeytrap-bootstrap.log) 2>&1
+
+export AWS_DEFAULT_REGION="${region}"
+
+# ---------------------------------------------------------------- management sshd
+# Port 22 belongs to the decoy. Either move the real sshd to the admin port
+# (key auth only) or switch it off entirely.
+%{ if admin_enabled ~}
+sed -i -E 's/^#?Port .*/Port ${admin_ssh_port}/' /etc/ssh/sshd_config
+sed -i -E 's/^#?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i -E 's/^#?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+systemctl restart sshd
+%{ else ~}
+systemctl disable --now sshd.socket sshd.service || true
+%{ endif ~}
+
+# ---------------------------------------------------------------- packages (AL2023 repo via S3 endpoint)
+dnf install -y docker iptables-nft
+systemctl enable --now docker
+
+# ---------------------------------------------------------------- container egress lockdown
+# Containers may answer inbound connections but may not initiate any outbound
+# connection (no C2, no scanning, no DNS, no IMDS).
+iptables -I DOCKER-USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -I DOCKER-USER 2 -i docker0 -d 169.254.169.254/32 -j DROP
+iptables -I DOCKER-USER 3 -i docker0 ! -o docker0 -m conntrack --ctstate NEW -j LOG --log-prefix "HONEYTRAP-EGRESS-BLOCK " --log-level 4
+iptables -I DOCKER-USER 4 -i docker0 ! -o docker0 -m conntrack --ctstate NEW -j DROP
+iptables -I INPUT 1 -i docker0 -m conntrack --ctstate NEW -j DROP
+iptables-save > /etc/sysconfig/iptables
+cat > /etc/systemd/system/honeytrap-iptables.service <<'UNIT'
+[Unit]
+Description=Restore HoneyTrap container egress rules
+After=docker.service
+Requires=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables-restore --noflush /etc/sysconfig/iptables
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl enable honeytrap-iptables.service
+
+# ---------------------------------------------------------------- Cowrie container
+install -d -m 0755 /opt/honeytrap
+install -d -o 10001 -g 10001 -m 0750 /opt/honeytrap/cowrie/var /opt/honeytrap/cowrie/var/log/cowrie \
+  /opt/honeytrap/cowrie/var/lib/cowrie/tty /opt/honeytrap/cowrie/var/lib/cowrie/downloads /opt/honeytrap/cowrie/var/run
+
+aws s3 cp "s3://${artifacts_bucket}/${image_key}" /tmp/cowrie-image.tar.gz --only-show-errors
+docker load -i /tmp/cowrie-image.tar.gz
+rm -f /tmp/cowrie-image.tar.gz
+# image etag: ${image_etag}
+
+docker run -d --name cowrie --restart unless-stopped \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --memory 384m --memory-swap 384m --pids-limit 256 --cpus 0.8 \
+  --log-driver json-file --log-opt max-size=10m --log-opt max-file=3 \
+  -e COWRIE_HONEYPOT_SENSOR_NAME="${sensor_name}" \
+  -v /opt/honeytrap/cowrie/var:/cowrie/var \
+  -p 22:2222 \
+%{ if enable_telnet ~}
+  -p 23:2223 \
+%{ endif ~}
+  honeytrap/cowrie:latest
+
+# ---------------------------------------------------------------- log shipper (host side)
+aws s3 cp "s3://${artifacts_bucket}/${shipper_key}" /opt/honeytrap/shipper.py --only-show-errors
+chmod 0755 /opt/honeytrap/shipper.py
+
+cat > /etc/systemd/system/honeytrap-shipper.service <<UNIT
+[Unit]
+Description=Ship HoneyTrap Cowrie telemetry to S3
+After=network-online.target docker.service
+[Service]
+Type=oneshot
+Environment=HONEYTRAP_BUCKET=${telemetry_bucket}
+Environment=HONEYTRAP_SENSOR=${sensor_name}
+Environment=HONEYTRAP_ORIGIN=live
+Environment=AWS_DEFAULT_REGION=${region}
+ExecStart=/usr/bin/python3 /opt/honeytrap/shipper.py --cowrie-var /opt/honeytrap/cowrie/var
+StateDirectory=honeytrap-shipper
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadOnlyPaths=/opt/honeytrap
+ProtectHome=yes
+PrivateTmp=yes
+UNIT
+
+cat > /etc/systemd/system/honeytrap-shipper.timer <<UNIT
+[Unit]
+Description=Run the HoneyTrap shipper every ${ship_interval} minutes
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=${ship_interval}min
+Persistent=true
+[Install]
+WantedBy=timers.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now honeytrap-shipper.timer
+
+# ---------------------------------------------------------------- housekeeping
+# Keep the journal small on an 8 GiB volume.
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nSystemMaxUse=200M\n' > /etc/systemd/journald.conf.d/honeytrap.conf
+systemctl restart systemd-journald
+echo "HoneyTrap sensor bootstrap complete"

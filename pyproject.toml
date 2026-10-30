@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "honeytrap"
+version = "1.0.0"
+description = "AWS HoneyTrap - cloud deception and automated threat intelligence pipeline for Cowrie telemetry"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = []  # the core engine and Lambdas use only the standard library (+ boto3 in AWS)
+
+[project.optional-dependencies]
+aws = ["boto3>=1.35"]
+geoip = ["maxminddb>=2.6"]
+
+[project.scripts]
+honeytrap = "honeytrap.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+
+[tool.setuptools.package-data]
+honeytrap = ["mitre/catalog.json", "detection/thresholds.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["backend", "lambda", "dashboard", "."]
+markers = [
+    "simulation: needs a running Cowrie honeypot on localhost (scripts/run_simulations.sh)",
+]
+addopts = "-m 'not simulation'"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["terraform", ".venv", "data", "build"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "S", "UP"]
+ignore = ["S101", "S311", "UP017", "UP040"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "B017"]
+"backend/honeytrap/synthetic.py" = ["S105", "S106", "S108"]
+"scripts/**" = ["S603", "S607"]
+
+[tool.coverage.run]
+source = ["backend/honeytrap", "lambda"]

@@ -1,0 +1,11 @@
+-r requirements.txt
+-r requirements-honeypot.txt
+maxminddb==3.2.0
+moto[s3,sns,ssm]==5.2.5
+paramiko==5.1.0
+pip-audit
+playwright==1.64.1
+pytest==9.2.0
+pytest-cov==7.1.0
+python-hcl2==8.1.4
+ruff==0.17.3

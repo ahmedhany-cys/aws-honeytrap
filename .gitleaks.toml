@@ -1,0 +1,8 @@
+# gitleaks configuration: default rules + a narrow allowlist for documented decoys.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented honeypot decoy values (docs/security.md) and generated, git-ignored data"
+regexes = ['''decoy-[a-z0-9-]+''']
+paths = ['''^data/''', '''^honeypot/runtime/''', '''^\.venv/''', '''^build/''', '''^terraform/\.terraform/''']

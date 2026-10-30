@@ -1,0 +1,361 @@
+{
+  "attack_version": "20.0",
+  "source": "https://github.com/mitre-attack/attack-stix-data (enterprise-attack)",
+  "attribution": "MITRE ATT&CK(R) content (c) The MITRE Corporation, reproduced under the ATT&CK Terms of Use.",
+  "techniques": {
+    "T1003.008": {
+      "id": "T1003.008",
+      "name": "/etc/passwd and /etc/shadow",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1003/008",
+      "description": "Adversaries may attempt to dump the contents of /etc/passwd and /etc/shadow to enable offline password cracking."
+    },
+    "T1016": {
+      "id": "T1016",
+      "name": "System Network Configuration Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1016",
+      "description": "Adversaries may look for details about the network configuration and settings, such as IP and/or MAC addresses, of systems they access or through information discovery of remote systems."
+    },
+    "T1018": {
+      "id": "T1018",
+      "name": "Remote System Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1018",
+      "description": "Adversaries may attempt to get a listing of other systems by IP address, hostname, or other logical identifier on a network that may be used for Lateral Movement from the current system."
+    },
+    "T1033": {
+      "id": "T1033",
+      "name": "System Owner/User Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1033",
+      "description": "Adversaries may attempt to identify the primary user, currently logged in user, set of users that commonly uses a system, or whether a user is actively using the system."
+    },
+    "T1037.004": {
+      "id": "T1037.004",
+      "name": "RC Scripts",
+      "tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1037/004",
+      "description": "Adversaries may establish persistence by modifying RC scripts, which are executed during a Unix-like system\u2019s startup."
+    },
+    "T1046": {
+      "id": "T1046",
+      "name": "Network Service Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1046",
+      "description": "Adversaries may attempt to get a listing of services running on remote hosts and local network infrastructure devices, including those that may be vulnerable to remote software exploitation."
+    },
+    "T1049": {
+      "id": "T1049",
+      "name": "System Network Connections Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1049",
+      "description": "Adversaries may attempt to get a listing of network connections to or from the compromised system they are currently accessing or from remote systems by querying for information over the network."
+    },
+    "T1053.003": {
+      "id": "T1053.003",
+      "name": "Cron",
+      "tactics": [
+        "Execution",
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1053/003",
+      "description": "Adversaries may abuse the cron utility to perform task scheduling for initial or recurring execution of malicious code."
+    },
+    "T1057": {
+      "id": "T1057",
+      "name": "Process Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1057",
+      "description": "Adversaries may attempt to get information about running processes on a system."
+    },
+    "T1059.004": {
+      "id": "T1059.004",
+      "name": "Unix Shell",
+      "tactics": [
+        "Execution"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1059/004",
+      "description": "Adversaries may abuse Unix shell commands and scripts for execution."
+    },
+    "T1070.003": {
+      "id": "T1070.003",
+      "name": "Clear Command History",
+      "tactics": [
+        "Stealth"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1070/003",
+      "description": "In addition to clearing system logs, an adversary may clear the command history of a compromised account to conceal the actions undertaken during an intrusion."
+    },
+    "T1070.004": {
+      "id": "T1070.004",
+      "name": "File Deletion",
+      "tactics": [
+        "Stealth"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1070/004",
+      "description": "Adversaries may delete files left behind by the actions of their intrusion activity."
+    },
+    "T1078": {
+      "id": "T1078",
+      "name": "Valid Accounts",
+      "tactics": [
+        "Stealth",
+        "Persistence",
+        "Privilege Escalation",
+        "Initial Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1078",
+      "description": "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion."
+    },
+    "T1078.001": {
+      "id": "T1078.001",
+      "name": "Default Accounts",
+      "tactics": [
+        "Stealth",
+        "Persistence",
+        "Privilege Escalation",
+        "Initial Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1078/001",
+      "description": "Adversaries may obtain and abuse credentials of a default account as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion."
+    },
+    "T1082": {
+      "id": "T1082",
+      "name": "System Information Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1082",
+      "description": "An adversary may attempt to get detailed information about the operating system and hardware, including version, patches, hotfixes, service packs, and architecture."
+    },
+    "T1083": {
+      "id": "T1083",
+      "name": "File and Directory Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1083",
+      "description": "Adversaries may enumerate files and directories or may search in specific locations of a host or network share for certain information within a file system."
+    },
+    "T1087.001": {
+      "id": "T1087.001",
+      "name": "Local Account",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1087/001",
+      "description": "Adversaries may attempt to get a listing of local system accounts."
+    },
+    "T1090": {
+      "id": "T1090",
+      "name": "Proxy",
+      "tactics": [
+        "Command and Control"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1090",
+      "description": "Adversaries may use a connection proxy to direct network traffic between systems or act as an intermediary for network communications to a command and control server to avoid direct connections to their infrastructure."
+    },
+    "T1098": {
+      "id": "T1098",
+      "name": "Account Manipulation",
+      "tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1098",
+      "description": "Adversaries may manipulate accounts to maintain and/or elevate access to victim systems."
+    },
+    "T1098.004": {
+      "id": "T1098.004",
+      "name": "SSH Authorized Keys",
+      "tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1098/004",
+      "description": "Adversaries may modify the SSH authorized_keys file to maintain persistence on a victim host."
+    },
+    "T1105": {
+      "id": "T1105",
+      "name": "Ingress Tool Transfer",
+      "tactics": [
+        "Command and Control"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1105",
+      "description": "Adversaries may transfer tools or other files from an external system into a compromised environment."
+    },
+    "T1110": {
+      "id": "T1110",
+      "name": "Brute Force",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1110",
+      "description": "Adversaries may use brute force techniques to gain access to accounts when passwords are unknown or when password hashes are obtained."
+    },
+    "T1110.001": {
+      "id": "T1110.001",
+      "name": "Password Guessing",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1110/001",
+      "description": "Adversaries with no prior knowledge of legitimate credentials within the system or environment may guess passwords to attempt access to accounts."
+    },
+    "T1110.003": {
+      "id": "T1110.003",
+      "name": "Password Spraying",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1110/003",
+      "description": "Adversaries may use a single or small list of commonly used passwords against many different accounts to attempt to acquire valid account credentials."
+    },
+    "T1110.004": {
+      "id": "T1110.004",
+      "name": "Credential Stuffing",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1110/004",
+      "description": "Adversaries may use credentials obtained from breach dumps of unrelated accounts to gain access to target accounts through credential overlap."
+    },
+    "T1136.001": {
+      "id": "T1136.001",
+      "name": "Local Account",
+      "tactics": [
+        "Persistence"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1136/001",
+      "description": "Adversaries may create a local account to maintain access to victim systems."
+    },
+    "T1140": {
+      "id": "T1140",
+      "name": "Deobfuscate/Decode Files or Information",
+      "tactics": [
+        "Stealth"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1140",
+      "description": "Adversaries may use Obfuscated Files or Information to hide artifacts of an intrusion from analysis."
+    },
+    "T1222.002": {
+      "id": "T1222.002",
+      "name": "Linux and Mac Permissions",
+      "tactics": [
+        "Defense Impairment"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1222/002",
+      "description": "Adversaries may modify file or directory permissions/attributes to evade access control lists (ACLs) and access protected files."
+    },
+    "T1496.001": {
+      "id": "T1496.001",
+      "name": "Compute Hijacking",
+      "tactics": [
+        "Impact"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1496/001",
+      "description": "Adversaries may leverage the compute resources of co-opted systems to complete resource-intensive tasks, which may impact system and/or hosted service availability."
+    },
+    "T1518.001": {
+      "id": "T1518.001",
+      "name": "Security Software Discovery",
+      "tactics": [
+        "Discovery"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1518/001",
+      "description": "Adversaries may attempt to get a listing of security software, configurations, defensive tools, and sensors that are installed on a system or in a cloud environment."
+    },
+    "T1531": {
+      "id": "T1531",
+      "name": "Account Access Removal",
+      "tactics": [
+        "Impact"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1531",
+      "description": "Adversaries may interrupt availability of system and network resources by inhibiting access to accounts utilized by legitimate users."
+    },
+    "T1543.002": {
+      "id": "T1543.002",
+      "name": "Systemd Service",
+      "tactics": [
+        "Persistence",
+        "Privilege Escalation"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1543/002",
+      "description": "Adversaries may create or modify systemd services to repeatedly execute malicious payloads as part of persistence."
+    },
+    "T1552.001": {
+      "id": "T1552.001",
+      "name": "Credentials In Files",
+      "tactics": [
+        "Credential Access"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1552/001",
+      "description": "Adversaries may search local file systems and remote file shares for files containing insecurely stored credentials."
+    },
+    "T1572": {
+      "id": "T1572",
+      "name": "Protocol Tunneling",
+      "tactics": [
+        "Command and Control"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1572",
+      "description": "Adversaries may tunnel network communications to and from a victim system within a separate protocol to avoid detection/network filtering and/or enable access to otherwise unreachable systems."
+    },
+    "T1595": {
+      "id": "T1595",
+      "name": "Active Scanning",
+      "tactics": [
+        "Reconnaissance"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1595",
+      "description": "Adversaries may execute active reconnaissance scans to gather information that can be used during targeting."
+    },
+    "T1685": {
+      "id": "T1685",
+      "name": "Disable or Modify Tools",
+      "tactics": [
+        "Defense Impairment"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1685",
+      "description": "Adversaries may disable, degrade, or tamper with security tools or applications (e.g., endpoint detection and response (EDR) tools, intrusion detection systems (IDS), antivirus, logging agents, sensors, etc.) to impair or reduce visibility of defensive capabilities."
+    },
+    "T1686": {
+      "id": "T1686",
+      "name": "Disable or Modify System Firewall",
+      "tactics": [
+        "Defense Impairment"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1686",
+      "description": "Adversaries may disable or modify host-based or network firewalls to impair defensive mechanisms and enable further action."
+    },
+    "T1690": {
+      "id": "T1690",
+      "name": "Prevent Command History Logging",
+      "tactics": [
+        "Defense Impairment"
+      ],
+      "url": "https://attack.mitre.org/techniques/T1690",
+      "description": "Adversaries may impair command history logging to hide commands they run on a compromised system."
+    }
+  }
+}

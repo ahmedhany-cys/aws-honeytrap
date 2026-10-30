@@ -1,0 +1,487 @@
+{
+  "generated_at": "2026-10-30T11:11:05Z",
+  "data_origin": "simulation",
+  "target": "127.0.0.1:2222/2223",
+  "platform": "macOS-15.6.1-arm64-arm-64bit",
+  "passed": 8,
+  "total": 8,
+  "scenarios": [
+    {
+      "scenario": "ssh_bruteforce",
+      "title": "SSH brute force",
+      "description": "30 failed password logins against root/admin",
+      "started_at": "2026-10-30T11:09:46Z",
+      "events_captured": 70,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.version",
+        "cowrie.login.failed",
+        "cowrie.session.closed",
+        "cowrie.session.connect"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-001",
+        "HT-AUTH-003",
+        "HT-NET-002"
+      ],
+      "fired_rules": [
+        "HT-AUTH-001",
+        "HT-AUTH-003",
+        "HT-NET-002"
+      ],
+      "expected_techniques": [
+        "T1110",
+        "T1110.001"
+      ],
+      "mapped_techniques": [
+        "T1110",
+        "T1110.001"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-NET-002",
+          "severity": "Low",
+          "summary": "10 sessions from 127.0.0.1 in 24h"
+        },
+        {
+          "rule_id": "HT-AUTH-001",
+          "severity": "Medium",
+          "summary": "14 failed logins from 127.0.0.1 within 10 minutes"
+        },
+        {
+          "rule_id": "HT-AUTH-003",
+          "severity": "Low",
+          "summary": "7 credential pair(s) retried >= 3 times from 127.0.0.1"
+        },
+        {
+          "rule_id": "HT-AUTH-001",
+          "severity": "Medium",
+          "summary": "16 failed logins from 127.0.0.1 within 10 minutes"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "failed_auth_spray",
+      "title": "Multiple failed authentications (password spray)",
+      "description": "One password across 8 usernames in 6 sessions",
+      "started_at": "2026-10-30T11:10:18Z",
+      "events_captured": 32,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.version",
+        "cowrie.login.failed",
+        "cowrie.session.closed",
+        "cowrie.session.connect"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-002",
+        "HT-NET-002"
+      ],
+      "fired_rules": [
+        "HT-AUTH-002",
+        "HT-NET-002"
+      ],
+      "expected_techniques": [
+        "T1110.003"
+      ],
+      "mapped_techniques": [
+        "T1110.003"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-NET-002",
+          "severity": "Low",
+          "summary": "6 sessions from 127.0.0.1 in 24h"
+        },
+        {
+          "rule_id": "HT-AUTH-002",
+          "severity": "Medium",
+          "summary": "Password W**********! sprayed across 8 usernames from 127.0.0.1"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "reconnaissance",
+      "title": "Post-login reconnaissance",
+      "description": "Discovery commands after a successful login",
+      "started_at": "2026-10-30T11:10:28Z",
+      "events_captured": 21,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.size",
+        "cowrie.client.version",
+        "cowrie.command.input",
+        "cowrie.log.closed",
+        "cowrie.login.success",
+        "cowrie.session.closed",
+        "cowrie.session.connect",
+        "cowrie.session.params"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-006",
+        "HT-CMD-001",
+        "HT-CMD-005"
+      ],
+      "fired_rules": [
+        "HT-AUTH-006",
+        "HT-CMD-001",
+        "HT-CMD-005"
+      ],
+      "expected_techniques": [
+        "T1078",
+        "T1082",
+        "T1033",
+        "T1016",
+        "T1057",
+        "T1049",
+        "T1087.001",
+        "T1552.001"
+      ],
+      "mapped_techniques": [
+        "T1016",
+        "T1033",
+        "T1049",
+        "T1057",
+        "T1078",
+        "T1078.001",
+        "T1082",
+        "T1083",
+        "T1087.001",
+        "T1552.001"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-AUTH-006",
+          "severity": "Medium",
+          "summary": "127.0.0.1 logged in to the decoy as root over ssh"
+        },
+        {
+          "rule_id": "HT-CMD-001",
+          "severity": "Medium",
+          "summary": "127.0.0.1: File and directory discovery; Local account discovery; Process discovery; System information discovery; System network configuration discovery; System network connections discovery; System owner/user discovery"
+        },
+        {
+          "rule_id": "HT-CMD-005",
+          "severity": "Medium",
+          "summary": "127.0.0.1: Searched files for credentials"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "suspicious_commands",
+      "title": "Suspicious shell activity",
+      "description": "Payload decoding, persistence and defence-evasion commands",
+      "started_at": "2026-10-30T11:10:38Z",
+      "events_captured": 18,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.size",
+        "cowrie.client.version",
+        "cowrie.command.input",
+        "cowrie.log.closed",
+        "cowrie.login.success",
+        "cowrie.session.closed",
+        "cowrie.session.connect",
+        "cowrie.session.file_write",
+        "cowrie.session.params"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-006",
+        "HT-CMD-002",
+        "HT-CMD-003",
+        "HT-CMD-004"
+      ],
+      "fired_rules": [
+        "HT-AUTH-006",
+        "HT-CMD-001",
+        "HT-CMD-002",
+        "HT-CMD-003",
+        "HT-CMD-004"
+      ],
+      "expected_techniques": [
+        "T1140",
+        "T1059.004",
+        "T1098.004",
+        "T1053.003",
+        "T1690",
+        "T1070.003",
+        "T1686"
+      ],
+      "mapped_techniques": [
+        "T1053.003",
+        "T1059.004",
+        "T1070.003",
+        "T1078",
+        "T1078.001",
+        "T1082",
+        "T1098.004",
+        "T1140",
+        "T1686",
+        "T1690"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-AUTH-006",
+          "severity": "Medium",
+          "summary": "127.0.0.1 logged in to the decoy as root over ssh"
+        },
+        {
+          "rule_id": "HT-CMD-004",
+          "severity": "High",
+          "summary": "127.0.0.1: Cleared shell history; Disabled or modified the host firewall; Prevented command history logging"
+        },
+        {
+          "rule_id": "HT-CMD-002",
+          "severity": "Medium",
+          "summary": "127.0.0.1: Decoded an encoded payload; Piped content into a shell interpreter"
+        },
+        {
+          "rule_id": "HT-CMD-001",
+          "severity": "Low",
+          "summary": "127.0.0.1: System information discovery"
+        },
+        {
+          "rule_id": "HT-CMD-003",
+          "severity": "High",
+          "summary": "127.0.0.1: Created or modified a cron job; Modified SSH authorized_keys"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "download_attempt",
+      "title": "Download and execute attempt",
+      "description": "wget/curl from a documentation-range URL, chmod +x and execution",
+      "started_at": "2026-10-30T11:10:46Z",
+      "events_captured": 15,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.size",
+        "cowrie.client.version",
+        "cowrie.command.failed",
+        "cowrie.command.input",
+        "cowrie.log.closed",
+        "cowrie.login.success",
+        "cowrie.session.closed",
+        "cowrie.session.connect",
+        "cowrie.session.params"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-006",
+        "HT-DL-001",
+        "HT-DL-002"
+      ],
+      "fired_rules": [
+        "HT-AUTH-006",
+        "HT-CMD-002",
+        "HT-DL-001",
+        "HT-DL-002"
+      ],
+      "expected_techniques": [
+        "T1105",
+        "T1059.004"
+      ],
+      "mapped_techniques": [
+        "T1059.004",
+        "T1078",
+        "T1078.001",
+        "T1105",
+        "T1222.002"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-AUTH-006",
+          "severity": "Medium",
+          "summary": "127.0.0.1 logged in to the decoy as root over ssh"
+        },
+        {
+          "rule_id": "HT-DL-001",
+          "severity": "High",
+          "summary": "127.0.0.1 attempted to transfer 2 file(s) to the decoy"
+        },
+        {
+          "rule_id": "HT-DL-002",
+          "severity": "Critical",
+          "summary": "127.0.0.1 downloaded and tried to execute i.sh, x86_64"
+        },
+        {
+          "rule_id": "HT-CMD-002",
+          "severity": "Medium",
+          "summary": "127.0.0.1: Executed a file from a world-writable directory; Made a file executable; Piped content into a shell interpreter"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "telnet_bruteforce",
+      "title": "Telnet default-credential brute force",
+      "description": "12 failed Telnet logins",
+      "started_at": "2026-10-30T11:10:57Z",
+      "events_captured": 60,
+      "event_types": [
+        "cowrie.login.failed",
+        "cowrie.session.closed",
+        "cowrie.session.connect",
+        "cowrie.telnet.option"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-AUTH-001"
+      ],
+      "fired_rules": [
+        "HT-AUTH-001",
+        "HT-NET-002"
+      ],
+      "expected_techniques": [
+        "T1110"
+      ],
+      "mapped_techniques": [
+        "T1110"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-NET-002",
+          "severity": "Low",
+          "summary": "12 sessions from 127.0.0.1 in 24h"
+        },
+        {
+          "rule_id": "HT-AUTH-001",
+          "severity": "Medium",
+          "summary": "12 failed logins from 127.0.0.1 within 10 minutes"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "tunnel_attempt",
+      "title": "SSH tunnelling attempt",
+      "description": "direct-tcpip request through the decoy",
+      "started_at": "2026-10-30T11:10:59Z",
+      "events_captured": 6,
+      "event_types": [
+        "cowrie.client.kex",
+        "cowrie.client.version",
+        "cowrie.direct-tcpip.request",
+        "cowrie.login.success",
+        "cowrie.session.closed",
+        "cowrie.session.connect"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-NET-003"
+      ],
+      "fired_rules": [
+        "HT-AUTH-006",
+        "HT-NET-003"
+      ],
+      "expected_techniques": [
+        "T1090"
+      ],
+      "mapped_techniques": [
+        "T1078",
+        "T1078.001",
+        "T1090",
+        "T1572"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-AUTH-006",
+          "severity": "Medium",
+          "summary": "127.0.0.1 logged in to the decoy as root over ssh"
+        },
+        {
+          "rule_id": "HT-NET-003",
+          "severity": "Medium",
+          "summary": "127.0.0.1 tried to tunnel through the decoy to 198.51.100.23:80"
+        }
+      ],
+      "error": null,
+      "passed": true
+    },
+    {
+      "scenario": "connection_flood",
+      "title": "High-frequency connections",
+      "description": "25 banner-grab connections in seconds",
+      "started_at": "2026-10-30T11:11:01Z",
+      "events_captured": 50,
+      "event_types": [
+        "cowrie.session.closed",
+        "cowrie.session.connect"
+      ],
+      "source_ips": [
+        "127.0.0.1"
+      ],
+      "expected_rules": [
+        "HT-NET-001"
+      ],
+      "fired_rules": [
+        "HT-NET-001",
+        "HT-NET-002"
+      ],
+      "expected_techniques": [
+        "T1595"
+      ],
+      "mapped_techniques": [
+        "T1595"
+      ],
+      "missing_rules": [],
+      "missing_techniques": [],
+      "alerts": [
+        {
+          "rule_id": "HT-NET-001",
+          "severity": "Low",
+          "summary": "25 connections from 127.0.0.1 in 1 minute(s)"
+        },
+        {
+          "rule_id": "HT-NET-002",
+          "severity": "Low",
+          "summary": "25 sessions from 127.0.0.1 in 24h"
+        }
+      ],
+      "error": null,
+      "passed": true
+    }
+  ]
+}

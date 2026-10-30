@@ -1,0 +1,17 @@
+# Cowrie UserDB: which username/password combinations the decoy ACCEPTS.
+# Format: username:x:password   (! = deny, * = any, /regex/ allowed)
+# These are emulated accounts on a fake shell; none exist on any real system.
+#
+# root: accept common weak passwords, but refuse a few so brute-forcers keep trying
+# and generate more telemetry before they get in.
+root:x:!root
+root:x:!123456
+root:x:!password
+root:x:*
+admin:x:admin
+admin:x:admin123
+deploy:x:deploy
+ubuntu:x:ubuntu
+pi:x:raspberry
+postgres:x:postgres
+*:x:!*

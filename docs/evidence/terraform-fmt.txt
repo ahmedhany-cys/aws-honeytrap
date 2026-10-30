@@ -1,0 +1,4 @@
+$ terraform version
+Terraform v1.17.0
+$ terraform fmt -check -recursive
+(no formatting changes needed)

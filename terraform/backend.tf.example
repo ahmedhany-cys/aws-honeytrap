@@ -1,0 +1,11 @@
+# Optional remote state. Create the bucket first (versioned, encrypted, private),
+# then: cp backend.tf.example backend.tf && terraform init -migrate-state
+terraform {
+  backend "s3" {
+    bucket       = "REPLACE-with-your-state-bucket"
+    key          = "aws-honeytrap/terraform.tfstate"
+    region       = "us-west-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+}

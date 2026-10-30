@@ -1,0 +1,9 @@
+{
+  "findings": 42,
+  "version": "8.30.1",
+  "scope": "working tree",
+  "rules": [
+    "generic-api-key",
+    "private-key"
+  ]
+}
