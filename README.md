@@ -198,7 +198,7 @@ Details, optional TI keys, remote state and CI notes are in **[docs/deployment.m
 | Unit (140) | Parser and redaction, every rule (threshold, below-threshold, technique), command classifier (positive and negative), severity and escalation, MITRE catalogue, enrichment (cache, TTL, rate limits, errors, non-public IPs), shipper, reports, synthetic-data safety | ✅ |
 | Integration (10) | Ingest → store → detect → alert → correlate. Lambda handlers on **moto** S3/SSM/SNS. Idempotent re-delivery. Dashboard loading from S3 | ✅ |
 | Security (26) | Policy-as-code over Terraform: S3-only egress, no NAT/LB/EIP, IMDSv2 hop 1, no IAM wildcards, write-only sensor role, public access blocks, TLS, lifecycle, SecureStrings. Secret patterns. `.gitignore` coverage. Decoy values | ✅ |
-| Simulation (8 scenarios) | Real Cowrie, real SSH/Telnet clients: brute force, spray, recon, suspicious commands, download+execute, Telnet, tunnelling, connection flood | ✅ 8/8 locally, and in CI against Docker |
+| Simulation (8 scenarios) | Real Cowrie, real SSH/Telnet clients: brute force, spray, recon, suspicious commands, download+execute, Telnet, tunnelling, connection flood | ✅ 8/8 locally (native Cowrie). The CI `honeypot` job repeats them against the Docker image |
 | IaC | `terraform fmt/validate`, tflint (AWS ruleset), Checkov | ✅ 0 issues / 0 failed |
 | Secrets & deps | gitleaks (full history), pip-audit | ✅ 0 findings |
 
@@ -242,7 +242,7 @@ There is no NAT gateway, load balancer, KMS CMK, interface endpoint, GuardDuty o
 * **A container is not a VM.** A Cowrie or Twisted RCE would run as uid 10001 in a locked-down container with no egress. gVisor or Firecracker would add a stronger boundary.
 * **No capture of second-stage payloads.** Egress is closed on purpose, so download attempts record URLs but not binaries. That is a deliberate safety trade-off.
 * **Enrichment is optional.** Without free API keys or a GeoLite2 database, live data shows `not_configured`. The dashboard never fills the gap with guesses. The map in the screenshots uses clearly labelled **synthetic** geo.
-* **Local verification was native, not Docker.** The development machine has no Docker engine, so the Docker image and compose stack are built and exercised in GitHub Actions instead. The native Cowrie run used the same configuration and decoy filesystem.
+* **Local verification was native, not Docker.** The development machine has no Docker engine. The Docker image and compose stack are therefore exercised only by the CI `honeypot` job; check the latest Actions run for its status. The native Cowrie run used the same configuration and decoy filesystem.
 
 ## Future improvements
 
