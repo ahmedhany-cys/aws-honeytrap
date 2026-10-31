@@ -6,6 +6,7 @@ correlate      - periodic pass over the last N hours to catch patterns that span
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol
@@ -20,6 +21,14 @@ from honeytrap.storage import repository as repo
 from honeytrap.storage.store import Store
 
 log = logging.getLogger(__name__)
+
+
+def _is_self_check(event: Event) -> bool:
+    """The sensor's own Docker HEALTHCHECK connects from loopback every 30 s."""
+    try:
+        return ipaddress.ip_address(event.src_ip).is_loopback
+    except ValueError:
+        return False
 
 
 class Notifier(Protocol):
@@ -70,11 +79,18 @@ def process_batch(
 ) -> dict[str, Any]:
     config = config or default_config()
     events = list(parse_lines(lines, origin=origin, redactor=redactor))
+    self_checks = 0
+    if DataOrigin(origin) is DataOrigin.LIVE:
+        # Nothing on the internet reaches a live sensor from loopback; the raw object
+        # keeps these lines, the processed views and detections do not.
+        kept = [e for e in events if not _is_self_check(e)]
+        self_checks, events = len(events) - len(kept), kept
     keys = repo.write_events(store, events, batch_id)
     alerts = evaluate(events, config)
     result = _enrich_and_store(store, events, alerts, config=config, enrichment=enrichment,
                                notifier=notifier, lookup_limit=lookup_limit)
-    result.update({"events": len(events), "event_objects": keys, "origin": DataOrigin(origin).value})
+    result.update({"events": len(events), "self_checks_dropped": self_checks, "event_objects": keys,
+                   "origin": DataOrigin(origin).value})
     log.info("processed batch %s: %s", batch_id, {k: v for k, v in result.items() if k != "event_objects"})
     return result
 

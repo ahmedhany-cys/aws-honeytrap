@@ -76,3 +76,20 @@ def test_origin_from_key():
         repo.origin_from_key("raw/sensor=a/x.json")
     with pytest.raises(ValueError):
         repo.origin_from_key("raw/origin=prod/x.json")
+
+
+def test_live_batches_drop_sensor_self_checks(store, redactor):
+    from tests.conftest import CowrieLog
+
+    log = CowrieLog()
+    for i in range(40):  # the Docker HEALTHCHECK, every 30 s
+        log.connect(ip="127.0.0.1", session=f"hc{i}", seconds=30)
+    log.connect(ip="203.0.113.9", session="a1")
+    log.login("root", "123456", ip="203.0.113.9", session="a1")
+    live = process_batch(store, log.lines(), origin=DataOrigin.LIVE, batch_id="live", redactor=redactor)
+    assert live["events"] == 2 and live["self_checks_dropped"] == 40
+    assert {e.src_ip for e in repo.read_events(store, origins=["live"])} == {"203.0.113.9"}
+    assert not any(a.src_ip == "127.0.0.1" for a in repo.read_alerts(store))
+    # Simulations legitimately come from loopback and are kept.
+    sim = process_batch(store, log.lines(), origin=DataOrigin.SIMULATION, batch_id="sim", redactor=redactor)
+    assert sim["self_checks_dropped"] == 0 and sim["events"] == 42
