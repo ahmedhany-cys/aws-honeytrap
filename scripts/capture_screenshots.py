@@ -33,13 +33,13 @@ def wait_ready(page: Page, text: str, timeout: float = 60) -> None:
     time.sleep(2.5)
 
 
-def shot(page: Page, name: str, height: int | None = None) -> None:
+def shot(page: Page, name: str, height: int | None = None, out: Path = OUT) -> None:
     if height:
         page.set_viewport_size({"width": 1600, "height": height})
         time.sleep(1.5)
-    path = OUT / name
+    path = out / name
     page.screenshot(path=str(path), full_page=False)
-    print(f"saved {path.relative_to(ROOT)}")
+    print(f"saved {path}")
 
 
 def click_tab(page: Page, label: str) -> None:
@@ -51,8 +51,12 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--url", default="http://127.0.0.1:8501")
     p.add_argument("--investigate", default="127.0.0.1", help="attacker IP for the investigation view")
+    p.add_argument("--out", default=str(OUT), help="output directory")
+    p.add_argument("--search", default="wget", help="evidence-explorer search term")
+    p.add_argument("--data-only", action="store_true", help="capture only the data views (01-06)")
     args = p.parse_args()
-    OUT.mkdir(exist_ok=True)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as pw:
         try:
@@ -66,7 +70,7 @@ def main() -> int:
             page.set_viewport_size({"width": 1600, "height": height})
             page.goto(args.url + path, wait_until="networkidle")
             wait_ready(page, ready)
-            shot(page, name)
+            shot(page, name, out=out)
 
         visit("/", "Highest-risk attackers", "01-dashboard-overview.png", 1180)
         visit("/attack-intelligence", "Most common commands", "02-attack-analytics.png", 1500)
@@ -77,23 +81,26 @@ def main() -> int:
         page.set_viewport_size({"width": 1600, "height": 1250})
         page.goto(args.url + "/evidence", wait_until="networkidle")
         wait_ready(page, "Event record")
-        page.get_by_placeholder("wget, authorized_keys, root …").fill("wget")
+        page.get_by_placeholder("wget, authorized_keys, root …").fill(args.search)
         page.keyboard.press("Enter")
         time.sleep(3)
         page.locator('[data-testid="stDataFrame"]').first.click(position={"x": 18, "y": 52})
         time.sleep(3)
-        shot(page, "06-evidence-explorer.png")
+        shot(page, "06-evidence-explorer.png", out=out)
+        if args.data_only:
+            browser.close()
+            return 0
 
         visit("/platform", "AWS architecture", "07-aws-architecture.png", 1080)
         page.set_viewport_size({"width": 1600, "height": 1350})
         click_tab(page, "Terraform & IaC security")
-        shot(page, "08-terraform-validation.png")
+        shot(page, "08-terraform-validation.png", out=out)
         page.set_viewport_size({"width": 1600, "height": 1050})
         click_tab(page, "Automated tests")
-        shot(page, "09-automated-tests.png")
+        shot(page, "09-automated-tests.png", out=out)
         page.set_viewport_size({"width": 1600, "height": 760})
         click_tab(page, "Attack simulations")
-        shot(page, "10-attack-simulations.png")
+        shot(page, "10-attack-simulations.png", out=out)
         browser.close()
     return 0
 
