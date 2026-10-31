@@ -46,9 +46,12 @@ UNIT
 systemctl enable honeytrap-iptables.service
 
 # ---------------------------------------------------------------- Cowrie container
-install -d -m 0755 /opt/honeytrap
-install -d -o 10001 -g 10001 -m 0750 /opt/honeytrap/cowrie/var /opt/honeytrap/cowrie/var/log/cowrie \
-  /opt/honeytrap/cowrie/var/lib/cowrie/tty /opt/honeytrap/cowrie/var/lib/cowrie/downloads /opt/honeytrap/cowrie/var/run
+install -d -m 0755 /opt/honeytrap /opt/honeytrap/cowrie
+# Cowrie (uid 10001) writes its uuid and SSH host keys to var/lib/cowrie, so every
+# level under var must be its own - install -d only chowns the leaf directories.
+for d in var var/log var/log/cowrie var/lib var/lib/cowrie var/lib/cowrie/tty var/lib/cowrie/downloads var/run; do
+  install -d -o 10001 -g 10001 -m 0750 "/opt/honeytrap/cowrie/$d"
+done
 
 aws s3 cp "s3://${artifacts_bucket}/${image_key}" /tmp/cowrie-image.tar.gz --only-show-errors
 docker load -i /tmp/cowrie-image.tar.gz
@@ -67,6 +70,16 @@ docker run -d --name cowrie --restart unless-stopped \
   -p 23:2223 \
 %{ endif ~}
   honeytrap/cowrie:latest
+
+# Health gate: the image's HEALTHCHECK connects to the SSH listener. Print the
+# outcome and the container log to the serial console (aws ec2 get-console-output),
+# the only diagnostics channel on a sensor without sshd or SSM.
+for _ in $(seq 1 24); do
+  [ "$(docker inspect -f '{{.State.Health.Status}}' cowrie)" = healthy ] && break
+  sleep 5
+done
+echo "HONEYTRAP-SENSOR-HEALTH $(docker inspect -f '{{.State.Status}}/{{.State.Health.Status}}' cowrie)"
+docker logs --tail 40 cowrie 2>&1 | sed 's/^/HONEYTRAP-COWRIE-LOG /'
 
 # ---------------------------------------------------------------- log shipper (host side)
 aws s3 cp "s3://${artifacts_bucket}/${shipper_key}" /opt/honeytrap/shipper.py --only-show-errors

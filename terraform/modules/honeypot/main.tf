@@ -23,7 +23,9 @@ resource "aws_s3_object" "image" {
   bucket = var.artifacts_bucket
   key    = "honeypot/cowrie-image.tar.gz"
   source = var.honeypot_image_path
-  etag   = filemd5(var.honeypot_image_path)
+  # The image is uploaded in parts, so its S3 ETag is never the file's MD5;
+  # source_hash detects changes without a perpetual diff.
+  source_hash = filemd5(var.honeypot_image_path)
 }
 
 resource "aws_s3_object" "shipper" {
@@ -150,7 +152,7 @@ resource "aws_instance" "sensor" {
     region           = data.aws_region.current.region
     artifacts_bucket = var.artifacts_bucket
     image_key        = aws_s3_object.image.key
-    image_etag       = aws_s3_object.image.etag
+    image_etag       = aws_s3_object.image.source_hash
     shipper_key      = aws_s3_object.shipper.key
     telemetry_bucket = var.telemetry_bucket
     sensor_name      = var.sensor_name

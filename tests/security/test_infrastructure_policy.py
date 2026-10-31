@@ -122,6 +122,21 @@ def test_user_data_container_lockdown():
     assert not re.search(r"(AKIA|ASIA)[0-9A-Z]{16}", ud)
 
 
+def test_user_data_gives_cowrie_every_state_directory():
+    # Regression: `install -d -o 10001 a/b/c` leaves the parents a/ and a/b/ owned
+    # by root, so Cowrie could not write var/lib/cowrie/ssh_host_rsa_key and the
+    # SSH listener never started on the first live deploy.
+    ud = text("modules/honeypot/user_data.sh.tftpl")
+    loop = re.search(r"for d in ([^;]+); do\n\s*install -d -o 10001 -g 10001", ud)
+    assert loop, "state directories must be created one level at a time as uid 10001"
+    created = set(loop.group(1).split())
+    for leaf in ["var/log/cowrie", "var/lib/cowrie/tty", "var/lib/cowrie/downloads", "var/run"]:
+        parts = leaf.split("/")
+        for i in range(1, len(parts) + 1):
+            assert "/".join(parts[:i]) in created, "/".join(parts[:i])
+    assert "HONEYTRAP-SENSOR-HEALTH" in ud, "bootstrap must report the container health to the console"
+
+
 # ----------------------------------------------------------------- IAM least privilege
 
 def _statements(src: str) -> list[str]:
