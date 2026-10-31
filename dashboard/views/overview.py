@@ -75,8 +75,10 @@ def render(ctx) -> None:
             if ctx["filters"]["ip"]:
                 prof = prof[prof["src_ip"].str.contains(ctx["filters"]["ip"], regex=False)]
             st.dataframe(
-                prof.head(10)[["src_ip", "data_origin", "risk_score", "risk_level", "actor_type", "sessions",
-                               "login_attempts", "commands", "alerts", "max_severity", "country_code"]],
+                # reindex: country_code only exists once at least one IP has GeoIP enrichment
+                prof.head(10).reindex(columns=["src_ip", "data_origin", "risk_score", "risk_level", "actor_type",
+                                               "sessions", "login_attempts", "commands", "alerts", "max_severity",
+                                               "country_code"]),
                 hide_index=True, use_container_width=True, height=320,
                 column_config={
                     "src_ip": "Source IP", "data_origin": "Origin",

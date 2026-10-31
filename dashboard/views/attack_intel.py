@@ -16,6 +16,14 @@ def _hbar(df: pd.DataFrame, x: str, y: str, title: str, height: int = 360, hover
     return ui.style_bar(fig, horizontal=True)
 
 
+def _chart_or_empty(df: pd.DataFrame, make, title: str, message: str) -> None:
+    if df.empty:
+        st.markdown(f"##### {title}")
+        ui.empty(message)
+    else:
+        st.plotly_chart(make(), use_container_width=True)
+
+
 def render(ctx) -> None:
     ev = ctx["events"]
     ui.header("Attack Intelligence", "Who is attacking, from where, and with what")
@@ -26,16 +34,18 @@ def render(ctx) -> None:
 
     daily = (ev.assign(day=ev["ts"].dt.floor("D"))
              .groupby("day").agg(events=("event_id", "size"), attackers=("src_ip", "nunique")).reset_index())
+    # Categorical day labels: a date axis with a single day zooms to sub-millisecond ticks.
+    daily["day"] = daily["day"].dt.strftime("%b %d")
     c1, c2 = st.columns(2)
     with c1:
         fig = px.bar(daily, x="day", y="events", title="Attack events per day", color_discrete_sequence=[ui.ACCENT])
-        fig.update_traces(hovertemplate="%{x|%b %d}: %{y:,} events<extra></extra>")
+        fig.update_traces(hovertemplate="%{x}: %{y:,} events<extra></extra>")
         fig.update_layout(height=300, xaxis_title="", yaxis_title="")
         st.plotly_chart(ui.style_bar(fig), use_container_width=True)
     with c2:
         fig = px.bar(daily, x="day", y="attackers", title="Unique attacking IPs per day",
                      color_discrete_sequence=[ui.SERIES[2]])
-        fig.update_traces(hovertemplate="%{x|%b %d}: %{y:,} IPs<extra></extra>")
+        fig.update_traces(hovertemplate="%{x}: %{y:,} IPs<extra></extra>")
         fig.update_layout(height=300, xaxis_title="", yaxis_title="")
         st.plotly_chart(ui.style_bar(fig), use_container_width=True)
 
@@ -75,20 +85,23 @@ def render(ctx) -> None:
     c1, c2, c3 = st.columns(3)
     with c1:
         users = logins["username"].value_counts().head(12).rename_axis("username").reset_index(name="attempts")
-        st.plotly_chart(_hbar(users, "attempts", "username", "Most attempted usernames", 400), use_container_width=True)
+        _chart_or_empty(users, lambda: _hbar(users, "attempts", "username", "Most attempted usernames", 400),
+                        "Most attempted usernames", "No login attempts in the selected data.")
     with c2:
         pw = (logins.dropna(subset=["password_fingerprint"])
               .groupby(["password_fingerprint", "password_masked", "password_length"]).size()
               .rename("attempts").reset_index().sort_values("attempts", ascending=False).head(12))
         pw["label"] = pw["password_masked"] + "  ·  " + pw["password_fingerprint"].str[:6]
-        fig = _hbar(pw, "attempts", "label", "Most attempted passwords (masked)", 400, hover="password_length")
-        st.plotly_chart(fig, use_container_width=True)
+        _chart_or_empty(pw, lambda: _hbar(pw, "attempts", "label", "Most attempted passwords (masked)", 400,
+                                          hover="password_length"),
+                        "Most attempted passwords (masked)", "No passwords tried in the selected data.")
         st.caption("Passwords are masked; the suffix is a keyed HMAC fingerprint so reuse can be correlated "
                    "without storing clear text.")
     with c3:
         clients = (ev["client_version"].dropna().value_counts().head(12)
                    .rename_axis("client").reset_index(name="sessions"))
-        st.plotly_chart(_hbar(clients, "sessions", "client", "SSH client versions", 400), use_container_width=True)
+        _chart_or_empty(clients, lambda: _hbar(clients, "sessions", "client", "SSH client versions", 400),
+                        "SSH client versions", "No client sent a version string.")
 
     cmds = ev[ev["event_type"] == "cowrie.command.input"]
     st.markdown("##### Most common commands")

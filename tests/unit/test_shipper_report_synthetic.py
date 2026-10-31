@@ -108,6 +108,22 @@ def test_report_unknown_ip(fixture_lines, redactor):
         build_report("203.0.113.250", events, [])
 
 
+@pytest.mark.parametrize(("ip", "status"), [
+    ("127.0.0.1", "skipped_non_public"),
+    ("8.8.8.8", "not_looked_up"),          # public, but no alert reached the enrichment threshold
+    ("139.100.x.x·22a7", "not_looked_up"),  # pseudonymised public address on a redacted dashboard
+])
+def test_report_enrichment_status_without_a_record(ip, status):
+    from tests.conftest import CowrieLog
+
+    log = CowrieLog()
+    log.connect(ip=ip)
+    events = list(parse_lines(log.lines(), origin="live"))
+    report = build_report(ip, events, [])
+    assert report["enrichment"] == {"enrichment_status": status}
+    assert f"`{status}`" in render_markdown(report)
+
+
 # ----------------------------------------------------------------- synthetic data
 
 

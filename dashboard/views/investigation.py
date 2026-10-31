@@ -7,7 +7,6 @@ import plotly.express as px
 import streamlit as st
 
 import ui
-from honeytrap.enrichment.service import is_public_ip
 from honeytrap.reporting.report import build_report, render_json, render_markdown
 
 
@@ -58,11 +57,13 @@ def render(ctx) -> None:
         st.markdown("##### Threat intelligence")
         enr = report["enrichment"]
         status = enr.get("enrichment_status")
-        if status == "none" and not is_public_ip(ip):
-            status = "skipped_non_public"
-        if status in (None, "none", "not_configured", "skipped_non_public", "unavailable", "deferred"):
-            ui.empty(f"No enrichment (status: {status}). Private/simulated addresses are never looked up, and nothing "
-                     "is assumed without a real lookup.")
+        reasons = {
+            "skipped_non_public": "Private/simulated addresses are never looked up.",
+            "not_looked_up": "Lookups run only for IPs whose alerts reach the enrichment threshold.",
+        }
+        if status in (None, "none", "not_configured", "skipped_non_public", "unavailable", "deferred", "not_looked_up"):
+            ui.empty(f"No enrichment (status: {status}). {reasons.get(status, '')} Nothing is assumed without a "
+                     "real lookup.")
         else:
             if enr.get("synthetic_enrichment"):
                 st.markdown(ui.origin_badge("synthetic") + " <span class='ht-muted'>demo enrichment, not a real lookup</span>",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
 from collections import Counter
 from datetime import datetime, timezone
@@ -9,7 +10,7 @@ from typing import Any
 
 from honeytrap.detection.commands import extract_urls
 from honeytrap.detection.engine import build_profiles
-from honeytrap.enrichment.service import is_public_ip, summarise
+from honeytrap.enrichment.service import summarise
 from honeytrap.mitre.catalog import attack_version
 from honeytrap.models import Alert, Event, Severity
 
@@ -39,6 +40,18 @@ RECOMMENDATIONS = {
 
 def _md_escape(text: str) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
+
+
+def _enrichment(ip: str, enrichment: dict | None) -> dict[str, Any]:
+    record = (enrichment or {}).get(ip)
+    if record:
+        return summarise(record)
+    try:
+        private = not ipaddress.ip_address(ip).is_global
+    except ValueError:
+        private = False  # a pseudonymised address only ever stands for a public one
+    # Only IPs whose alerts reach the enrichment threshold are looked up.
+    return {"enrichment_status": "skipped_non_public" if private else "not_looked_up"}
 
 
 def build_report(ip: str, events: list[Event], alerts: list[Alert],
@@ -73,8 +86,7 @@ def build_report(ip: str, events: list[Event], alerts: list[Alert],
         "data_origins": origins,
         "attack_version": attack_version(),
         "profile": profile,
-        "enrichment": summarise((enrichment or {}).get(ip)) if (enrichment or {}).get(ip) or is_public_ip(ip)
-        else {"enrichment_status": "skipped_non_public"},
+        "enrichment": _enrichment(ip, enrichment),
         "alerts": [a.to_dict() for a in alerts],
         "techniques": sorted(techniques.values(), key=lambda t: t["technique_id"]),
         "usernames": Counter(e.username for e in events if e.username).most_common(15),
@@ -118,7 +130,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     status = enr.get("enrichment_status")
-    if status in (None, "none", "not_configured", "skipped_non_public", "unavailable", "deferred"):
+    if status in (None, "none", "not_configured", "skipped_non_public", "unavailable", "deferred", "not_looked_up"):
         lines.append(f"No enrichment available (status: `{status}`). No reputation data is assumed.")
     else:
         if enr.get("synthetic_enrichment"):
