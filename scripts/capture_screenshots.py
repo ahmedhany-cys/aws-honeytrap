@@ -22,7 +22,9 @@ OUT = ROOT / "screenshots"
 
 
 def wait_ready(page: Page, text: str, timeout: float = 60) -> None:
-    page.wait_for_selector(f"text={text}", timeout=timeout * 1000)
+    # A view with nothing to show (e.g. no alerts in a quiet live window) renders its empty state.
+    page.locator(f"text={text}").or_(page.locator("text=No alerts for the current filters.")) \
+        .first.wait_for(timeout=timeout * 1000)
     # Streamlit streams elements; wait until the run indicator disappears and charts are drawn.
     end = time.time() + timeout
     while time.time() < end:

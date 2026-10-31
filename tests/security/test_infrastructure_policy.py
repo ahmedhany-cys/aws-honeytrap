@@ -137,6 +137,15 @@ def test_user_data_gives_cowrie_every_state_directory():
     assert "HONEYTRAP-SENSOR-HEALTH" in ud, "bootstrap must report the container health to the console"
 
 
+def test_flow_log_bucket_policy_matches_the_delivery_path():
+    # Regression: with hive_compatible_partitions the service writes to
+    # AWSLogs/aws-account-id=<id>/, so a policy scoped to AWSLogs/<id>/ denies every delivery.
+    network, storage = text("modules/network/main.tf"), text("modules/storage/main.tf")
+    hive = re.search(r"hive_compatible_partitions\s*=\s*true", network)
+    expected = "flowlogs/AWSLogs/aws-account-id=${var.account_id}/*" if hive else "flowlogs/AWSLogs/${var.account_id}/*"
+    assert expected in storage
+
+
 # ----------------------------------------------------------------- IAM least privilege
 
 def _statements(src: str) -> list[str]:

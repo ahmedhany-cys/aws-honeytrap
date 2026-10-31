@@ -99,10 +99,11 @@ data "aws_iam_policy_document" "bucket" {
   dynamic "statement" {
     for_each = each.key == "telemetry" ? [1] : []
     content {
-      sid       = "AllowVPCFlowLogsDelivery"
-      effect    = "Allow"
-      actions   = ["s3:PutObject"]
-      resources = ["${each.value.arn}/flowlogs/AWSLogs/${var.account_id}/*"]
+      sid     = "AllowVPCFlowLogsDelivery"
+      effect  = "Allow"
+      actions = ["s3:PutObject"]
+      # The flow log uses Hive-compatible partitions: AWSLogs/aws-account-id=<id>/...
+      resources = ["${each.value.arn}/flowlogs/AWSLogs/aws-account-id=${var.account_id}/*"]
       principals {
         type        = "Service"
         identifiers = ["delivery.logs.amazonaws.com"]
