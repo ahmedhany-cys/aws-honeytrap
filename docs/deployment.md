@@ -69,7 +69,9 @@ HONEYTRAP_DATA=s3://$(terraform -chdir=terraform output -raw telemetry_bucket) s
 
 ### Verify the sensor without attacking anything
 
-* `aws s3 ls s3://<telemetry>/raw/origin=live/` shows objects within ~10 minutes. Internet scanners find port 22 quickly.
+* The sensor has no sshd or SSM, so its **serial console is the diagnostics channel**. About 6 minutes after launch, `aws ec2 get-console-output --instance-id <id> --latest --output text | grep HONEYTRAP-` should show `HONEYTRAP-SENSOR-HEALTH running/healthy` followed by the last Cowrie log lines. Look for "Ready to accept SSH connections".
+* `aws s3 ls s3://<telemetry>/raw/origin=live/` shows objects within ~10 minutes. They include the container's own health checks, which the processor drops from live batches.
+* Attack volume on a fresh IP varies a lot. The 2026-10-31 proof of concept saw only 11 scanner sessions in about 5 hours, and no logins (see the README's *Live proof of concept*). A quiet sensor is not necessarily a broken one: if the banner answers, the path works.
 * CloudWatch → `HoneyTrap` namespace → `EventsProcessed` increases.
 * The `honeytrap-dev-no-telemetry` alarm stays OK.
 * **Do not run the simulation scripts against the deployed sensor.** Its shipper labels everything it ships as `live`, which would mix your own test traffic into real telemetry. Validate detections with the local modes; CI does this on every push. The simulation runner also refuses non-private targets unless they are authorised twice.
@@ -81,6 +83,8 @@ scripts/teardown.sh dev     # type 'destroy'; verifies nothing tagged remains
 ```
 
 Buckets are created with `force_destroy = true`, so the captured data is deleted with the stack. Copy anything you want to keep first.
+
+Right after `destroy`, the Resource Groups Tagging API can still list a few ARNs for a while (eventual consistency). If the script warns, query the services directly; the commands used for the proof of concept are in `docs/evidence/live-poc/teardown-verification.txt`. A `terminated` instance is not billed.
 
 ## Remote state (optional)
 

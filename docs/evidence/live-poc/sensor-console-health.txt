@@ -1,0 +1,5 @@
+Cloud-init v. 22.2.2 finished at Sat, 31 Oct 2026 05:31:07 +0000. Datasource DataSourceEc2.  Up 342.24 seconds
+HONEYTRAP-COWRIE-LOG 2026-10-31T05:30:35.028363Z [cowrie.ssh.factory.CowrieSSHFactory#info] Ready to accept SSH connections
+HONEYTRAP-COWRIE-LOG 2026-10-31T05:30:35.263755Z [cowrie.telnet.factory.HoneyPotTelnetFactory#info] Ready to accept Telnet connections
+HONEYTRAP-SENSOR-HEALTH running/healthy
+HoneyTrap sensor bootstrap complete

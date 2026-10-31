@@ -1,0 +1,23 @@
+HoneyTrap dev stack - teardown verification (2026-10-31T10:50Z, us-west-1)
+
+scripts/teardown.sh dev  ->  "Destroy complete! Resources: 80 destroyed."
+
+The tagging API still listed 7 ARNs immediately afterwards (eventual consistency), so each
+service was checked directly:
+
+  EC2 instances        i-09e4e7f4c43e6078f terminated (no charge); none pending/running/stopped
+  EBS volume           InvalidVolume.NotFound
+  VPC / SG / endpoint  none
+  Flow logs            none
+  Elastic IPs          none
+  NAT gateways         none
+  S3 buckets           none (honeytrap-*)
+  Lambda functions     none
+  Lambda log groups    none
+  SNS / SQS / SSM      none
+  CloudWatch alarms    none
+  Athena / Glue        none
+  EventBridge rules    none
+  IAM roles            none (honeytrap-*)
+
+Free plan: ACTIVE, credits 120.77 USD (120.78 before the run; billing data lags up to 24 h).

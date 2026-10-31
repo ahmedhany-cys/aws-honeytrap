@@ -48,5 +48,5 @@
     "aws_vpc_security_group_ingress_rule": 1,
     "random_password": 1
   },
-  "applied": false
+  "applied": true
 }

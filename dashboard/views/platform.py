@@ -88,8 +88,11 @@ def _tests() -> None:
         ("Security", int((df["layer"] == "security").sum()), "IaC / IAM / secrets checks"),
         ("Line coverage", f"{cov['totals']['percent_covered']:.0f}%" if cov else "n/a", "backend + lambda"),
     ])
-    st.caption(f"Source: docs/evidence/pytest-junit.xml (run {suite.get('timestamp', '')[:19]} UTC, "
-               f"{float(suite.get('time', 0)):.1f}s).")
+    # pytest writes local time, with an offset in recent versions; show UTC when the offset is known.
+    ran = pd.Timestamp(suite.get("timestamp")) if suite.get("timestamp") else None
+    when = "" if ran is None else (f"run {ran.tz_convert('UTC'):%Y-%m-%d %H:%M:%S} UTC, " if ran.tzinfo
+                                   else f"run {ran:%Y-%m-%d %H:%M:%S} local time, ")
+    st.caption(f"Source: docs/evidence/pytest-junit.xml ({when}{float(suite.get('time', 0)):.1f}s).")
     by_layer = df.groupby(["layer", "status"]).size().unstack(fill_value=0).reset_index()
     st.dataframe(by_layer, hide_index=True, use_container_width=True)
     st.dataframe(df, hide_index=True, use_container_width=True, height=360)

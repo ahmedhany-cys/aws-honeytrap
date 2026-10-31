@@ -1,0 +1,102 @@
+{
+  "generated_at": "2026-10-31T10:40:57Z",
+  "data_origin": "live",
+  "note": "Proof-of-concept run on the AWS Free plan. Counts only; attacker IPs are deliberately not published.",
+  "deployment": {
+    "region": "us-west-1",
+    "environment": "dev",
+    "terraform_resources": 80,
+    "first_apply": "2026-10-31T04:59Z",
+    "sensor_live_from": "2026-10-31T05:30:35Z",
+    "sensor": {
+      "type": "t3.micro",
+      "launched": "2026-10-31T05:25:19+00:00",
+      "imds_tokens": "required",
+      "imds_hop_limit": 1,
+      "az": "us-west-1a"
+    },
+    "tagged_resources_seen_via_tagging_api": 33,
+    "tagged_resource_types": {
+      "athena:workgroup": 1,
+      "cloudwatch:alarm": 5,
+      "ec2:instance": 1,
+      "ec2:internet-gateway": 1,
+      "ec2:network-acl": 1,
+      "ec2:route-table": 1,
+      "ec2:security-group": 2,
+      "ec2:security-group-rule": 2,
+      "ec2:subnet": 1,
+      "ec2:volume": 1,
+      "ec2:vpc": 1,
+      "ec2:vpc-endpoint": 1,
+      "ec2:vpc-flow-log": 1,
+      "events:rule": 2,
+      "glue:database": 1,
+      "lambda:function": 2,
+      "logs:log-group": 2,
+      "s3:honeytrap-dev-artifacts-114750943005": 1,
+      "s3:honeytrap-dev-telemetry-114750943005": 1,
+      "sns:honeytrap-dev-alerts": 1,
+      "sqs:honeytrap-dev-pipeline-dlq": 1,
+      "ssm:parameter": 3
+    }
+  },
+  "capture_window": {
+    "first_external_event": "2026-10-31T05:34:28.138819Z",
+    "last_external_event": "2026-10-31T09:57:00.973415Z",
+    "raw_objects_shipped": 53
+  },
+  "live_capture": {
+    "external_events": 23,
+    "external_sessions": 11,
+    "distinct_source_ips": 8,
+    "event_types": {
+      "cowrie.session.connect": 11,
+      "cowrie.session.closed": 11,
+      "cowrie.client.version": 1
+    },
+    "client_versions": {
+      "GET / HTTP/1.1": 1
+    },
+    "login_attempts": 0,
+    "commands": 0,
+    "sensor_self_checks_in_raw": 1232,
+    "includes_operator_banner_check": "one session at 2026-10-31T05:34:28Z was our own SSH banner check against the authorized sensor"
+  },
+  "pipeline": {
+    "processor_invocations_logged": 52,
+    "processed_events_total": 25,
+    "self_checks_dropped_total": 1206,
+    "alerts_total": 0,
+    "correlator_runs": 5,
+    "correlator_last": {
+      "EventsCorrelated": 23,
+      "AlertsNew": 0,
+      "Notifications": 0
+    },
+    "lambda_errors": {
+      "processor": 0,
+      "correlator": 0
+    },
+    "dlq_messages": 0,
+    "processed_events_total_note": "includes 2 loopback events from the first batch, processed before the self-check filter was deployed; that derived object was removed"
+  },
+  "vpc_flow_logs": {
+    "window_utc": [
+      "2026-10-31 10:40:36",
+      "2026-10-31 10:45:27"
+    ],
+    "note": "Flow-log delivery only began after the bucket-policy fix, so this covers the final minutes of the run.",
+    "inbound_flows": 53,
+    "inbound_sources": 47,
+    "inbound_distinct_ports": 43,
+    "inbound_by_action": {
+      "REJECT": 53
+    },
+    "inbound_port_22_flows": 0,
+    "outbound_from_sensor": {
+      "17/123 REJECT": 2
+    },
+    "interpretation": "Internet-wide scanners probed dozens of closed ports and were rejected by the security group/NACL; the sensor's only outbound attempts (NTP to the internet) were rejected, confirming the egress lockdown."
+  }
+}

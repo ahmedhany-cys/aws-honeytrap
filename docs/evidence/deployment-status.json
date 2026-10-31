@@ -1,6 +1,10 @@
 {
-  "status": "NOT DEPLOYED",
-  "detail": "terraform plan succeeded against the target account (80 resources, read-only); terraform apply has not been run and awaits the owner's explicit approval because it creates publicly exposed, potentially billable resources.",
-  "account_plan": "AWS Free plan (credits), checked with `aws freetier get-account-plan-state` on 2026-10-30",
-  "region": "us-west-1"
+  "status": "DEPLOYED FOR A PROOF OF CONCEPT, THEN DESTROYED",
+  "detail": "terraform apply created all 80 resources in us-west-1 on 2026-10-31 (Free plan credits). The sensor was live from 05:30Z to 10:48Z, captured real internet scans end to end, and was destroyed with scripts/teardown.sh (80 destroyed, every resource type verified gone). Nothing is running now.",
+  "applied_at": "2026-10-31T04:59:12Z",
+  "sensor_live_from": "2026-10-31T05:30:35Z",
+  "destroyed_at": "2026-10-31T10:49Z",
+  "account_plan": "AWS Free plan (credits); $120.78 before, $120.77 reported right after teardown (billing data lags up to 24 h)",
+  "region": "us-west-1",
+  "evidence": "docs/evidence/live-poc/"
 }

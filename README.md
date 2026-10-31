@@ -18,15 +18,15 @@ A **Streamlit dashboard** lets an analyst investigate attackers and export incid
 
 > **Status, stated plainly**
 > * ✅ Built, run and tested **locally**: the honeypot captured real Cowrie events from controlled simulations, the detections fired, and the dashboard rendered.
-> * ✅ `terraform validate`, tflint (0 issues), Checkov (210 passed / 0 failed / 27 justified skips) and a **read-only `terraform plan` against the target AWS account** (80 resources) all succeed.
-> * ⏸️ **Not deployed to AWS yet.** `terraform apply` creates a publicly exposed, billable sensor and is waiting for the account owner's explicit approval. No screenshot or number in this README comes from live internet traffic.
-> * Every dataset is labelled: **SIMULATION** (our own scripts against our own honeypot) or **SYNTHETIC** (generated demo data from RFC 5737 documentation IP ranges).
+> * ✅ `terraform validate`, tflint (0 issues), Checkov (210 passed / 0 failed / 27 justified skips) and `terraform plan` against the target AWS account (80 resources) all succeed.
+> * ✅ **Deployed to AWS once, for a live proof of concept, then destroyed.** On 2026-10-31 all 80 resources went up in us-west-1 on Free plan credits, the sensor ran for about 5 h 20 min, and real internet scans travelled the whole pipeline. Everything was torn down and each resource type was verified gone. Results, including what went wrong, are in [Live proof of concept](#live-proof-of-concept-aws-2026-10-31).
+> * Every dataset is labelled: **LIVE** (real internet traffic, from that run only), **SIMULATION** (our own scripts against our own honeypot) or **SYNTHETIC** (generated demo data from RFC 5737 documentation IP ranges).
 
 ---
 
 ## Contents
 
-[Scenario](#fictional-incident-scenario) · [Architecture](#architecture) · [Security controls](#security-controls) · [Detections](#detection-capabilities) · [ATT&CK](#mitre-attck-mapping) · [Dashboard](#dashboard) · [Quick start](#quick-start-local-no-aws-needed) · [AWS deployment](#aws-deployment) · [Testing](#testing) · [Example investigation](#example-investigation) · [Cost](#cost-considerations) · [Limitations](#limitations) · [Roadmap](#future-improvements)
+[Scenario](#fictional-incident-scenario) · [Architecture](#architecture) · [Security controls](#security-controls) · [Detections](#detection-capabilities) · [ATT&CK](#mitre-attck-mapping) · [Dashboard](#dashboard) · [Live PoC](#live-proof-of-concept-aws-2026-10-31) · [Quick start](#quick-start-local-no-aws-needed) · [AWS deployment](#aws-deployment) · [Testing](#testing) · [Example investigation](#example-investigation) · [Cost](#cost-considerations) · [Limitations](#limitations) · [Roadmap](#future-improvements)
 
 ## Fictional incident scenario
 
@@ -144,7 +144,40 @@ The data shown below is **SIMULATION** (272 real Cowrie events from the 8 contro
 
 <sub>**How these were captured.** All images are renders of the running application at `http://127.0.0.1:8501`, captured by [scripts/capture_screenshots.py](scripts/capture_screenshots.py) (headless Chrome via Playwright, 1600 px wide at 2×). The same pages were also opened and checked in the Claude desktop app's built-in browser. Its native 800×500 captures are kept in [screenshots/built-in-browser/](screenshots/built-in-browser/).
 
-`07` shows the architecture *design* diagram inside the app, not the AWS console, because nothing has been deployed. `08` shows a read-only `terraform plan` (80 resources), not an apply.</sub>
+`07` shows the architecture *design* diagram inside the app, not the AWS console. `08` shows the `terraform plan` (80 resources) that was later applied for the [live proof of concept](#live-proof-of-concept-aws-2026-10-31).</sub>
+
+## Live proof of concept (AWS, 2026-10-31)
+
+The stack was deployed once to prove it works against the real internet. It was then destroyed. **Nothing is running now.**
+
+| | |
+|---|---|
+| Deploy | `scripts/deploy.sh dev`: 80 resources in us-west-1, AWS Free plan credits |
+| Sensor live | 05:30Z → 10:48Z (about 5 h 20 min) on a t3.micro, IMDSv2 hop limit 1, no sshd, no internet egress |
+| Teardown | `scripts/teardown.sh dev`: 80 destroyed, then each service checked directly ([verification](docs/evidence/live-poc/teardown-verification.txt)) |
+| Cost | About $0.10 of credits: two t3.micro launches totalling about 5.7 h, plus a public IPv4 address (balance $120.78 → $120.77; billing lags) |
+
+**What the sensor saw** ([summary](docs/evidence/live-poc/live-poc-summary.json)): 23 events, 11 sessions and 8 distinct source IPs.
+
+* Every session was a scanner connecting and leaving within milliseconds. One client sent `GET / HTTP/1.1` as its "SSH version", which is an HTTP scanner probing port 22.
+* No login attempts or commands arrived, so **no detection rule fired**. That is correct behaviour, not a gap: the rules need authentication or command evidence.
+* VPC flow logs from the final minutes show the wider picture. 47 sources probed 43 closed ports, and the security group and NACL rejected all 53 flows. The sensor's only outbound attempts, NTP to the internet, were **rejected** as well, which directly confirms the egress lockdown.
+* All of it travelled the full pipeline: sensor shipper → S3 `raw/` → EventBridge → processor Lambda (52 invocations, 0 errors, empty DLQ) → `processed/` → hourly correlator → dashboard.
+
+Screenshots of the live run show public IPs pseudonymised as `a.b.x.x·tag` (`HONEYTRAP_REDACT_IPS=1`), so no attacker address is published:
+
+| | |
+|---|---|
+| **Overview (LIVE)**<br>![Live overview](screenshots/live/01-dashboard-overview.png) | **Attack intelligence (LIVE)**<br>![Live attack intelligence](screenshots/live/02-attack-analytics.png) |
+| **Attacker investigation (LIVE)**<br>![Live investigation](screenshots/live/03-attacker-investigation.png) | **Evidence explorer (LIVE)**<br>![Live evidence](screenshots/live/06-evidence-explorer.png) |
+
+**What the live run caught that local testing could not.** Each issue is fixed and covered by a regression test:
+
+1. **The SSH listener never started.** `install -d -o 10001` only chowns the leaf directories, so `var/lib/cowrie` stayed root-owned and Cowrie could not write its host keys. User data now creates every level as uid 10001. Bootstrap also waits on the container health check and prints the Cowrie log to the serial console, the only diagnostics channel on a sensor without sshd or SSM.
+2. **A perpetual Terraform diff.** The image is uploaded in parts, so its S3 ETag is never the file's MD5. That caused an endless diff and an "inconsistent final plan" error. The fix uses `source_hash`.
+3. **The health check looked like an attacker.** Docker's HEALTHCHECK connects from 127.0.0.1 every 30 s. The processor now drops loopback sessions from **live** batches only; 1,206 were dropped, and the raw objects keep them.
+4. **Flow-log delivery failed** with "Access error". Hive-compatible partitions write to `AWSLogs/aws-account-id=<id>/`, which the bucket policy did not cover.
+5. **The dashboard broke on quiet data.** It crashed with no GeoIP data or no alerts, drew sub-millisecond axes for a single day, and reported pseudonymised IPs as "non-public". All of these are fixed.
 
 ## Quick start (local, no AWS needed)
 
@@ -203,7 +236,7 @@ Details, optional TI keys, remote state and CI notes are in **[docs/deployment.m
 | Secrets & deps | gitleaks (full history), pip-audit | ✅ 0 findings |
 
 ```bash
-pytest                                   # unit + integration + security (176 tests, 87 % coverage)
+pytest                                   # unit + integration + security (186 tests, 88 % coverage)
 pytest -m simulation                     # needs the local honeypot running
 scripts/collect_evidence.sh              # regenerates docs/evidence/ (and PLAN=1 for a read-only plan)
 ```
@@ -236,7 +269,7 @@ There is no NAT gateway, load balancer, KMS CMK, interface endpoint, GuardDuty o
 
 ## Limitations
 
-* **Not yet deployed.** No live internet telemetry has been collected. The detections are validated on simulations and synthetic data only, and real-world thresholds will need tuning against real volume.
+* **One short live run.** The only live data is about 5 hours of internet scanning from the 2026-10-31 proof of concept: 11 sessions, no logins. The detections are proven on simulations and synthetic data; their real-world thresholds still need tuning against real attack volume.
 * **Tumbling windows.** A burst that straddles a window boundary is counted in two windows; the example report shows exactly this (14 + 36 failures). The hourly correlator mitigates it. True sliding windows would need state (DynamoDB).
 * **Cowrie is fingerprintable.** Skilled operators can detect it. The value is in high-volume automated attacks.
 * **A container is not a VM.** A Cowrie or Twisted RCE would run as uid 10001 in a locked-down container with no egress. gVisor or Firecracker would add a stronger boundary.
